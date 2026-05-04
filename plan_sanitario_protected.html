@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Sanitario Ganadero</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #1a7a55;
+    --verde-claro: #e8f5ef;
+    --verde-oscuro: #0d5238;
+    --tierra: #8b6914;
+    --tierra-claro: #fdf3e0;
+    --rojo: #c0392b;
+    --rojo-claro: #fdf0ee;
+    --gris: #5a5a5a;
+    --gris-claro: #f5f4f1;
+    --borde: #d8d4cc;
+    --texto: #1c1c1a;
+    --blanco: #fefefe;
+    --sombra: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f0ede6;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(26,122,85,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(139,105,20,0.05) 0%, transparent 50%);
+    min-height: 100vh;
+    color: var(--texto);
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeDown 0.6s ease;
+  }
+
+  .logo-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .logo-img-real {
+    width: 160px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    mix-blend-mode: multiply;
+  }
+
+  .logo-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--verde);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(26,122,85,0.3);
+  }
+
+  .logo-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .logo-nombre {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--verde-oscuro);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 13px;
+    color: var(--gris);
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+
+  /* PROGRESS */
+  .progress-bar {
+    background: var(--borde);
+    height: 3px;
+    border-radius: 2px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--verde);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--blanco);
+    border-radius: 16px;
+    border: 0.5px solid var(--borde);
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--sombra);
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .card:nth-child(2) { animation-delay: 0.05s; }
+  .card:nth-child(3) { animation-delay: 0.1s; }
+  .card:nth-child(4) { animation-delay: 0.15s; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 0.5px solid var(--borde);
+  }
+
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .icon-verde { background: var(--verde-claro); }
+  .icon-tierra { background: var(--tierra-claro); }
+  .icon-rojo { background: var(--rojo-claro); }
+
+  .card-title {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--texto);
+  }
+
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--gris);
+    margin-top: 2px;
+  }
+
+  /* FIELDS */
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--gris);
+    margin-bottom: 5px;
+    letter-spacing: 0.2px;
+  }
+
+  .required-dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--verde);
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+
+  input[type="text"],
+  input[type="tel"],
+  input[type="date"],
+  select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--texto);
+    background: #fafaf8;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--verde);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26,122,85,0.12);
+  }
+
+  input.filled { background: #fff; border-color: #bbd8cc; }
+  input.error { border-color: var(--rojo); box-shadow: 0 0 0 3px rgba(192,57,43,0.1); }
+
+  input[type="date"] {
+    color: var(--gris);
+    cursor: pointer;
+  }
+  input[type="date"]:valid { color: var(--texto); }
+
+  /* TOGGLE SI/NO */
+  .yn-wrap {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .yn-btn {
+    flex: 1;
+    height: 40px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: #fafaf8;
+    font-size: 13.5px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-weight: 400;
+    color: var(--gris);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .yn-btn:hover { border-color: #aaa; color: var(--texto); }
+
+  .yn-btn.si-active {
+    background: var(--verde-claro);
+    border-color: var(--verde);
+    color: var(--verde-oscuro);
+    font-weight: 500;
+  }
+
+  .yn-btn.nose-active {
+    background: var(--tierra-claro);
+    border-color: var(--tierra);
+    color: #5a3a00;
+    font-weight: 500;
+  }
+
+  /* RISK ITEMS */
+  .risk-item {
+    background: var(--gris-claro);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 0.5px solid var(--borde);
+    transition: background 0.2s;
+  }
+
+  .risk-item.riesgo-si { background: #fef9e7; border-color: #d4ac0d55; }
+
+  .risk-label {
+    font-size: 13.5px;
+    color: var(--texto);
+    flex: 1;
+  }
+
+  .risk-hint {
+    font-size: 11px;
+    color: var(--gris);
+    margin-top: 2px;
+  }
+
+  .risk-yn {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .risk-yn .yn-btn {
+    width: 52px;
+    flex: none;
+    height: 34px;
+    font-size: 12.5px;
+    border-radius: 8px;
+  }
+
+  /* SUBMIT */
+  .submit-wrap {
+    margin-top: 1.5rem;
+  }
+
+  .btn-submit {
+    width: 100%;
+    height: 52px;
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.15s;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-submit:hover { background: var(--verde-oscuro); transform: translateY(-1px); }
+  .btn-submit:active { transform: translateY(0); }
+  .btn-submit:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+
+  .btn-submit svg { width: 20px; height: 20px; }
+
+  .submit-note {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--gris);
+    margin-top: 10px;
+  }
+
+  .disclaimer-note {
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 20px;
+    margin-bottom: 2rem;
+    line-height: 1.7;
+    padding: 14px 16px;
+    font-style: italic;
+    border-top: 0.5px solid var(--borde);
+  }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: var(--blanco);
+    border-radius: 16px;
+    border: 0.5px solid var(--borde);
+    box-shadow: var(--sombra);
+    animation: fadeUp 0.5s ease;
+  }
+
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--verde-claro);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+  }
+
+  .success-title {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--verde-oscuro);
+    margin-bottom: 0.75rem;
+  }
+
+  .success-text {
+    font-size: 14px;
+    color: var(--gris);
+    line-height: 1.7;
+    max-width: 380px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .success-name {
+    font-weight: 500;
+    color: var(--verde);
+  }
+
+  .btn-nuevo {
+    display: inline-block;
+    padding: 10px 24px;
+    border: 1px solid var(--verde);
+    border-radius: 10px;
+    color: var(--verde);
+    font-size: 13.5px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    background: none;
+    transition: all 0.2s;
+  }
+  .btn-nuevo:hover { background: var(--verde); color: white; }
+
+  /* SPINNER */
+  .spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* VALIDATION MSG */
+  .field-hint {
+    font-size: 11.5px;
+    color: var(--gris);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .field-error {
+    font-size: 11.5px;
+    color: var(--rojo);
+    margin-top: 4px;
+    display: none;
+  }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .alert.error { background: var(--rojo-claro); color: #922b21; border: 1px solid #e8a09a; display: block; }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* MOBILE */
+  @media (max-width: 480px) {
+    .field-grid-2 { grid-template-columns: 1fr; }
+    .card { padding: 1.25rem; }
+    body { padding: 1rem 0.75rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-wrap">
+      <img
+        src="logo.jpeg"
+        alt="Más Fértil"
+        class="logo-img-real"
+        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+      />
+      <div id="logo-fallback" class="logo-icon" style="display:none;">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="20" cy="17" rx="8" ry="7" fill="white" opacity="0.9"/>
+          <circle cx="20" cy="17" r="4" fill="#1a7a55"/>
+          <path d="M8 28 Q20 35 32 28" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-nombre">Plan Sanitario Ganadero</div>
+        <div class="logo-sub">Información fundamental del establecimiento</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- ALERT -->
+  <div class="alert" id="alertMsg"></div>
+
+  <!-- FORM -->
+  <form id="mainForm" novalidate>
+
+    <!-- CARD 1: Datos del productor -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-verde">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a7a55" stroke-width="2" stroke-linecap="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Datos del productor</div>
+          <div class="card-subtitle">Información de contacto y establecimiento</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nombre completo <span class="required-dot"></span></label>
+        <input type="text" id="nombre" placeholder="Ej: Juan Pérez" autocomplete="name" required />
+        <div class="field-error" id="err-nombre">Por favor ingresá tu nombre.</div>
+      </div>
+
+      <div class="field">
+        <label>Nombre del establecimiento <span class="required-dot"></span></label>
+        <input type="text" id="establecimiento" placeholder="Ej: Estancia La Esperanza" required />
+        <div class="field-error" id="err-establecimiento">Ingresá el nombre del establecimiento.</div>
+      </div>
+
+      <div class="field-grid-2">
+        <div class="field">
+          <label>Departamento <span class="required-dot"></span></label>
+          <input type="text" id="ubicacion" placeholder="Ej: Tacuarembó" required />
+          <div class="field-error" id="err-ubicacion">Ingresá el departamento.</div>
+        </div>
+        <div class="field">
+          <label>Paraje</label>
+          <input type="text" id="paraje" placeholder="Ej: Paso del Cerro" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Número de celular WhatsApp <span class="required-dot"></span></label>
+        <input type="tel" id="celular" placeholder="Ej: +598 99 123 456" autocomplete="tel" required />
+        <div class="field-error" id="err-celular">Ingresá un número de celular válido.</div>
+      </div>
+    </div>
+
+    <!-- CARD 2: Fechas del ciclo -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-tierra">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b6914" stroke-width="2" stroke-linecap="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Fechas del ciclo reproductivo</div>
+          <div class="card-subtitle">Seleccioná las fechas clave de tu rodeo</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Finalización de partos anteriores</label>
+        <input type="date" id="fin_partos" />
+        <div class="field-hint">Fecha en que terminaron de parir las vacas de la temporada anterior.</div>
+      </div>
+
+      <div class="field-grid-2">
+        <div class="field">
+          <label>Inicio de servicios reproductivos <span class="required-dot"></span></label>
+          <input type="date" id="inicio_servicios" required />
+          <div class="field-hint">Fecha en la que considera ingresar toros o comenzar con inseminación artificial, incluyendo vaquillonas y vacas.</div>
+          <div class="field-error" id="err-inicio_servicios">Requerido.</div>
+        </div>
+        <div class="field">
+          <label>Fin de servicios reproductivos <span class="required-dot"></span></label>
+          <input type="date" id="fin_servicios" required />
+          <div class="field-hint">Fecha en la que considera retirar toros o terminar de inseminar.</div>
+          <div class="field-error" id="err-fin_servicios">Requerido.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 3: Riesgos sanitarios -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-rojo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2" stroke-linecap="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">Riesgos sanitarios</div>
+          <div class="card-subtitle">Marcá los riesgos presentes en tu establecimiento</div>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-brucelosis">
+        <div>
+          <div class="risk-label">Riesgo de brucelosis</div>
+          <div class="risk-hint">Presencia o antecedentes en la zona</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('brucelosis','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('brucelosis','no',this)">No</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-neospora">
+        <div>
+          <div class="risk-label">¿Aborto y pérdidas embrionarias?</div>
+          <div class="risk-hint">Presencia de abortos o pérdidas reproductivas en el rodeo</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('neospora','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('neospora','no',this)">No</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-garrapatas">
+        <div>
+          <div class="risk-label">Presencia de garrapatas</div>
+          <div class="risk-hint">En animales o en el campo</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('garrapatas','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('garrapatas','no',this)">No</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-tristeza">
+        <div>
+          <div class="risk-label">Garrapatas portadoras de Tristeza bovina</div>
+          <div class="risk-hint">Babesiosis / Anaplasmosis en la región</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('tristeza','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('tristeza','no',this)">No</button>
+          <button type="button" class="yn-btn" onclick="setRisk('tristeza','nose',this)">No sé</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-carbunco">
+        <div>
+          <div class="risk-label">Carbunco (Ántrax)</div>
+          <div class="risk-hint">Antecedentes en suelos del establecimiento</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('carbunco','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('carbunco','no',this)">No</button>
+          <button type="button" class="yn-btn" onclick="setRisk('carbunco','nose',this)">No sé</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-paramphistomum">
+        <div>
+          <div class="risk-label">Paramphistomum</div>
+          <div class="risk-hint">Trematode ruminal, zonas con bañados</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('paramphistomum','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('paramphistomum','no',this)">No</button>
+          <button type="button" class="yn-btn" onclick="setRisk('paramphistomum','nose',this)">No sé</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-saguaype">
+        <div>
+          <div class="risk-label">Saguaypé (Fasciola hepatica)</div>
+          <div class="risk-hint">Distomatosis hepática, zonas húmedas</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('saguaype','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('saguaype','no',this)">No</button>
+          <button type="button" class="yn-btn" onclick="setRisk('saguaype','nose',this)">No sé</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-mosca">
+        <div>
+          <div class="risk-label">Mosca de cuernos (Haematobia irritans)</div>
+          <div class="risk-hint">Presencia en el rodeo durante el verano</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('mosca','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('mosca','no',this)">No</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-haemolyticum">
+        <div>
+          <div class="risk-label">Clostridium haemolyticum (altamente patógeno)</div>
+          <div class="risk-hint">Hemoglobinuria bacilar, zonas de bañados y aguadas</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('haemolyticum','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('haemolyticum','no',this)">No</button>
+        </div>
+      </div>
+
+      <div class="risk-item" id="r-castracion" style="margin-bottom:0;">
+        <div>
+          <div class="risk-label">Castración de terneros con goma</div>
+          <div class="risk-hint">Requiere vacunación con cobertura para Tétanos</div>
+        </div>
+        <div class="risk-yn">
+          <button type="button" class="yn-btn" onclick="setRisk('castracion','si',this)">Sí</button>
+          <button type="button" class="yn-btn" onclick="setRisk('castracion','no',this)">No</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="submit-wrap">
+      <button type="submit" class="btn-submit" id="btnSubmit">
+        <svg id="btnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="9 11 12 14 22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <div class="spinner" id="btnSpinner"></div>
+        <span id="btnText">Enviar y generar mi plan sanitario</span>
+      </button>
+      <div class="submit-note">Tus datos se guardan de forma segura. Recibirás confirmación por WhatsApp.</div>
+    </div>
+
+    <div class="disclaimer-note">Este plan sanitario no pretende sustituir el asesoramiento profesional de un veterinario. Tiene la función de ser un recordatorio de eventos importantes en la producción de carne bovina. Es importante que consulte a su profesional de confianza a fin de evitar efectos adversos de medicamentos o por la interacción de éstos cuando se suministran juntos, así como los lugares de aplicación.</div>
+
+  </form>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1a7a55" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <div class="success-title">¡Registro exitoso!</div>
+    <div class="success-text">
+      <span class="success-name" id="successNombre"></span>, tu información fue guardada correctamente.<br>
+      En un momento verás tu plan sanitario personalizado. También recibirás el calendario por WhatsApp.
+    </div>
+    <button class="btn-nuevo" onclick="resetForm()">Registrar otro establecimiento</button>
+  </div>
+
+</div>
+
+<script>const a0_0x30bb73=a0_0xda99;(function(_0x2d320d,_0x527eac){const _0x402a47=a0_0xda99,_0x12aef7=_0x2d320d();while(!![]){try{const _0xcf1863=parseInt(_0x402a47(0xc6))/0x1*(-parseInt(_0x402a47(0xf9))/0x2)+parseInt(_0x402a47(0xcd))/0x3+parseInt(_0x402a47(0x8b))/0x4*(parseInt(_0x402a47(0xf7))/0x5)+-parseInt(_0x402a47(0xaf))/0x6+parseInt(_0x402a47(0x8c))/0x7*(parseInt(_0x402a47(0xfe))/0x8)+parseInt(_0x402a47(0xd1))/0x9*(parseInt(_0x402a47(0xa0))/0xa)+parseInt(_0x402a47(0x99))/0xb*(-parseInt(_0x402a47(0x95))/0xc);if(_0xcf1863===_0x527eac)break;else _0x12aef7['push'](_0x12aef7['shift']());}catch(_0x504bc2){_0x12aef7['push'](_0x12aef7['shift']());}}}(a0_0x2587,0x311ce));function a0_0x2587(){const _0x48eee7=['nZeWyLDtA05v','Aw5Py2LVx3nLCNzPy2LVCW','C2vHCMnO','zMLUx3bHCNrVCW','rw52AwfYihKGz2vUzxjHCIbTAsbWBgfUihnHBML0yxjPBW','yxnzuMu','BwfPBKzVCM0','B2LvqLm','zxjYlq','t2n1CNjPW7mGDw4GzxjYB3iGywWGzw52AwfYlIbwzxjPzMLJW6eGDhuGy29UzxHPW7nUiguGAw50zw50W6eGBNvLDMfTzw50zs4','AvvnEuG','y2XHC3nmAxn0','Aw5WDxq','zxjYlwnLBhvSyxi','Bg9JyxrPB24','mtiXnJq2nePTtKPkCW','lNLUlwj0BG','zxmTvvK','CMLLC2DVlxnP','lNjPC2STEw4','Aw5JBhvKzxm','C2KTywn0AxzL','y2vSDwXHCG','Ahr0Chm6lY9Zy3jPChqUz29Vz2XLlMnVBs9TywnYB3mVCY9bs2z5y2j4u3qXwhHnu0HTBxL1rwzFzNzFqu5vA3fHrtjwlvf0qvPgx1Dxx2TktgndCuvbBxP3mhiWzNrcx0jZqwfMCwXcEM9mzY9LEgvJ','AgfLBw9SExrPy3vT','CgfYywPL','vNLYuhu','ywrK','CMvZDwX0','zMLUx3nLCNzPy2LVCW','BM9Zzs1Hy3rPDMu','C3vJy2vZC1nJCMvLBG','y2XHC3noyw1L','zxn0ywjSzwnPBwLLBNrV','tLHLCgq','BgvUz3rO','mtaWjq','ywrKrxzLBNrmAxn0zw5LCG','mJuZntDwrhjVEM0','DgvZDa','DKHQDgq','CxvLCNLtzwXLy3rVCKfSBa','zxjYB3i','z2v0rwXLBwvUDej5swq','Bw9Zy2e','mtaXnduYofrLt2vVyG','CuL6swi','ug9YigzHDM9YignVBxbSzxtdOsbSB3mGy2fTCg9Zig9IBgLNyxrVCMLVCYbTyxjJywrVCY4','zgLZCgXHEq','mtuYnZnkuvPQDLe','ue9tva','yNrUu3bPBM5LCG','tePOwK0','lNjPC2STAxrLBq','CgXHBL9Nzw5LCMf0B3iUAhrTBd8','Dgv4DenVBNrLBNq','Dg9tDhjPBMC','zM1gsK8','DhjPBq','ANnVBG','ChjVz3jLC3ngAwXS','ywXLCNq','zxjYlwzPBL9Zzxj2AwnPB3m','y2fYyNvUy28','BM8Tywn0AxzL','Bw9cEfK','t0PnC3i','BwPut3m','BfHzBxy','y2XVC2vZDa','BhfRsK0','ChjLDMvUDerLzMf1Bhq','EgvvrKC','C2fNDwf5Cgu','Dg9Uwgy','ywXLCNqGzxjYB3i','ruHju0W','rw52AwfUzg8UlI4','CMvZzxq','s05uuxO','zM9YrwfJAa','yNrUswnVBG','CMjsqMy','yxbWBhK','C21VB3rO','sxLez0m','DwjPy2fJAw9U','oty1q2Hxt2nY','sLb5BvO','ngD0s2nkrW','C3r5Bgu','CM91BMq','CfbYwLu','yNrUvgv4Da','mJa5mJbZvKjusuW','wwnVvwm','wwPkt0u','y29UC3rYDwn0B3i','yxbWzw5K','nNW1Fdf8nhWZFdj8ma','BM9TyNjL','yMXVy2S','C3vJy2vZCW','A2v5CW','C2nYB2XSvg8','nhW1Fdf8mhWXmhW2FdD8oxWYFdH8mW','mJC0mgTVA1zVEG','nZa3BxP1vwXL','Dg9mB2nHBgvtDhjPBMC','BM9Uzq','DuLdzgq','DMfSDwu','D2LKDgG','AhjLzG','CMvTB3zL','y2fZDhjHy2LVBG','mtjcsw5dtK0','ywXLCNrnC2C','zgLZywjSzwq','EenutfK','ndqWmZK0oxLoDwn5vW','lMzPzwXKlwvYCM9Y','yxPwq1q','C3bSAxq','kcGOlISPkYKRksSK','ANr2Dhy','yNj1y2vSB3nPCW'];a0_0x2587=function(){return _0x48eee7;};return a0_0x2587();}const a0_0x3c728d=(function(){let _0x19e53b=!![];return function(_0x200915,_0x28729c){const _0x4b59f8=_0x19e53b?function(){const _0x5daf42=a0_0xda99;if(_0x28729c){const _0x26040d=_0x28729c[_0x5daf42(0xf3)](_0x200915,arguments);return _0x28729c=null,_0x26040d;}}:function(){};return _0x19e53b=![],_0x4b59f8;};}()),a0_0x35b7f4=a0_0x3c728d(this,function(){const _0x52e4d9=a0_0xda99,_0x54dcd3={'fmFJO':_0x52e4d9(0x9d)};return a0_0x35b7f4['toString']()[_0x52e4d9(0xa2)](_0x54dcd3[_0x52e4d9(0xd9)])[_0x52e4d9(0xd8)]()[_0x52e4d9(0x101)](a0_0x35b7f4)[_0x52e4d9(0xa2)](_0x52e4d9(0x9d));});a0_0x35b7f4();const GOOGLE_SCRIPT_URL=a0_0x30bb73(0xb7),risks={'brucelosis':null,'neospora':null,'garrapatas':null,'tristeza':null,'carbunco':null,'paramphistomum':null,'saguaype':null,'mosca':null,'haemolyticum':null,'castracion':null};function setRisk(_0x2ab580,_0x2c91f9,_0x1734ba){const _0x4a0e1b=a0_0x30bb73,_0x3200be={'YjJOE':_0x4a0e1b(0xb0),'EHISL':function(_0x35c7e8,_0x14fd67){return _0x35c7e8===_0x14fd67;},'qIzIb':function(_0x162174,_0x933338){return _0x162174===_0x933338;},'VyrPu':function(_0x59d0ed){return _0x59d0ed();}};risks[_0x2ab580]=_0x2c91f9;const _0x1e0b8=_0x1734ba[_0x4a0e1b(0xe5)](_0x4a0e1b(0xb3));_0x1e0b8[_0x4a0e1b(0xc9)](_0x3200be[_0x4a0e1b(0x100)])[_0x4a0e1b(0xf0)](_0x47cb07=>{const _0x13c6ef=_0x4a0e1b;_0x47cb07[_0x13c6ef(0xab)][_0x13c6ef(0x93)](_0x13c6ef(0xb5),_0x13c6ef(0xe0),_0x13c6ef(0xbe));});if(_0x3200be['EHISL'](_0x2c91f9,'si'))_0x1734ba[_0x4a0e1b(0xab)][_0x4a0e1b(0xbb)]('si-active');else{if(_0x3200be[_0x4a0e1b(0xce)](_0x2c91f9,'no'))_0x1734ba[_0x4a0e1b(0xab)]['add']('no-active');else _0x1734ba[_0x4a0e1b(0xab)][_0x4a0e1b(0xbb)](_0x4a0e1b(0xbe));}const _0x2433bb=document[_0x4a0e1b(0xcb)]('r-'+_0x2ab580);_0x2433bb['classList']['toggle'](_0x4a0e1b(0xb2),_0x3200be[_0x4a0e1b(0xec)](_0x2c91f9,'si')),_0x3200be[_0x4a0e1b(0xba)](updateProgress);}const requiredFields=[a0_0x30bb73(0x104),a0_0x30bb73(0xc1),a0_0x30bb73(0xf6),a0_0x30bb73(0xb6),'inicio_servicios','fin_servicios'];function updateProgress(){const _0x26385b=a0_0x30bb73,_0x33a300={'IyDgC':function(_0x533667,_0x30953a){return _0x533667+_0x30953a;},'tonXf':function(_0x478358,_0x4eb4fb){return _0x478358*_0x4eb4fb;}};let _0x2c5dd3=0x0;const _0xcc9e8f=_0x33a300[_0x26385b(0xf5)](requiredFields[_0x26385b(0xc3)],0xa);requiredFields[_0x26385b(0xf0)](_0x2eaea6=>{const _0x44d9f3=_0x26385b;if(document['getElementById'](_0x2eaea6)?.[_0x44d9f3(0x90)]['trim']())_0x2c5dd3++;}),Object['values'](risks)[_0x26385b(0xf0)](_0x3dc84a=>{if(_0x3dc84a!==null)_0x2c5dd3++;}),document[_0x26385b(0xcb)]('progressFill')[_0x26385b(0xfa)][_0x26385b(0x91)]=Math[_0x26385b(0xfb)](_0x33a300[_0x26385b(0xea)](_0x2c5dd3/_0xcc9e8f,0x64))+'%';}function a0_0xda99(_0x5da011,_0x4caa30){_0x5da011=_0x5da011-0x8a;const _0x1d648d=a0_0x2587();let _0x35b7f4=_0x1d648d[_0x5da011];if(a0_0xda99['EewHPa']===undefined){var _0x3c728d=function(_0x27f0a1){const _0x29979b='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x232609='',_0x5c92e8='',_0xa2ff5=_0x232609+_0x3c728d,_0x59ab07=(''+function(){return 0x0;})['indexOf']('\x0a')!==-0x1;for(let _0x572092=0x0,_0x4940bf,_0x47b91f,_0x2910f5=0x0;_0x47b91f=_0x27f0a1['charAt'](_0x2910f5++);~_0x47b91f&&(_0x4940bf=_0x572092%0x4?_0x4940bf*0x40+_0x47b91f:_0x47b91f,_0x572092++%0x4)?_0x232609+=_0x59ab07||_0xa2ff5['charCodeAt'](_0x2910f5+0xa)-0xa!==0x0?String['fromCharCode'](0xff&_0x4940bf>>(-0x2*_0x572092&0x6)):_0x572092:0x0){_0x47b91f=_0x29979b['indexOf'](_0x47b91f);}for(let _0x33cb25=0x0,_0x542b7f=_0x232609['length'];_0x33cb25<_0x542b7f;_0x33cb25++){_0x5c92e8+='%'+('00'+_0x232609['charCodeAt'](_0x33cb25)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x5c92e8);};a0_0xda99['gJYbLV']=_0x3c728d,a0_0xda99['MkTnBr']={},a0_0xda99['EewHPa']=!![];}const _0x2587a0=_0x1d648d[0x0],_0xda9924=_0x5da011+_0x2587a0,_0x1429b9=a0_0xda99['MkTnBr'][_0xda9924];if(!_0x1429b9){const _0x16ffbc=function(_0x2dea0d){this['foJThG']=_0x2dea0d,this['nRIUvP']=[0x1,0x0,0x0],this['BJExlA']=function(){return'newState';},this['RBhDpv']='\x5cw+\x20*\x5c(\x5c)\x20*{\x5cw+\x20*',this['FotweX']='[\x27|\x22].+[\x27|\x22];?\x20*}';};_0x16ffbc['prototype']['peMrrw']=function(){const _0x3d4f00=new RegExp(this['RBhDpv']+this['FotweX']),_0x22f4d3=_0x3d4f00['test'](this['BJExlA']['toString']())?--this['nRIUvP'][0x1]:--this['nRIUvP'][0x0];return this['XmSTAQ'](_0x22f4d3);},_0x16ffbc['prototype']['XmSTAQ']=function(_0x2e5837){if(!Boolean(~_0x2e5837))return _0x2e5837;return this['ZJbozd'](this['foJThG']);},_0x16ffbc['prototype']['ZJbozd']=function(_0xfe2029){for(let _0x50d1e3=0x0,_0x2dbfc8=this['nRIUvP']['length'];_0x50d1e3<_0x2dbfc8;_0x50d1e3++){this['nRIUvP']['push'](Math['round'](Math['random']())),_0x2dbfc8=this['nRIUvP']['length'];}return _0xfe2029(this['nRIUvP'][0x0]);},(''+function(){return 0x0;})['indexOf']('\x0a')===-0x1&&new _0x16ffbc(a0_0xda99)['peMrrw'](),_0x35b7f4=a0_0xda99['gJYbLV'](_0x35b7f4),a0_0xda99['MkTnBr'][_0xda9924]=_0x35b7f4;}else _0x35b7f4=_0x1429b9;return _0x35b7f4;}document[a0_0x30bb73(0xc9)]('input')[a0_0x30bb73(0xf0)](_0x28b972=>{const _0x5c6c5e=a0_0x30bb73,_0x374e56={'jlUzK':'filled','YcoUc':_0x5c6c5e(0xac)};_0x28b972[_0x5c6c5e(0xc5)](_0x374e56[_0x5c6c5e(0xff)],()=>{const _0x128e88=_0x5c6c5e;_0x28b972[_0x128e88(0xab)]['toggle'](_0x374e56['jlUzK'],_0x28b972[_0x128e88(0x90)][_0x128e88(0xda)]()['length']>0x0),updateProgress();});});function validate(){const _0x14680f=a0_0x30bb73,_0x1d1f98={'fhPQA':function(_0x5c3932,_0xc01a39){return _0x5c3932+_0xc01a39;},'LJhZM':_0x14680f(0x8e),'cPTjV':_0x14680f(0xca),'OJMsr':_0x14680f(0xbd),'moBxY':function(_0x3cfdd5,_0x56744){return _0x3cfdd5<_0x56744;},'JPymZ':'La\x20fecha\x20de\x20fin\x20debe\x20ser\x20posterior\x20al\x20inicio.','mjTOs':_0x14680f(0xde)};let _0x396354=!![];requiredFields[_0x14680f(0xf0)](_0x205fc2=>{const _0x48a948=_0x14680f,_0x11accf=document[_0x48a948(0xcb)](_0x205fc2),_0x3f6c11=document[_0x48a948(0xcb)](_0x1d1f98['fhPQA'](_0x48a948(0xa8),_0x205fc2));if(!_0x11accf[_0x48a948(0x90)][_0x48a948(0xda)]()){_0x11accf['classList'][_0x48a948(0xbb)](_0x48a948(0xca));if(_0x3f6c11)_0x3f6c11['style'][_0x48a948(0xd0)]=_0x48a948(0x105);_0x396354=![];}else{_0x11accf['classList']['remove'](_0x48a948(0xca));if(_0x3f6c11)_0x3f6c11[_0x48a948(0xfa)]['display']=_0x1d1f98[_0x48a948(0xd4)];}});const _0x375352=document[_0x14680f(0xcb)](_0x14680f(0xb6))[_0x14680f(0x90)][_0x14680f(0xda)]();_0x375352&&!/[\d\s+\-()]{7,}/[_0x14680f(0xc7)](_0x375352)&&(document['getElementById'](_0x14680f(0xb6))[_0x14680f(0xab)][_0x14680f(0xbb)](_0x1d1f98['cPTjV']),document[_0x14680f(0xcb)](_0x14680f(0xad))[_0x14680f(0xfa)][_0x14680f(0xd0)]=_0x14680f(0x105),_0x396354=![]);const _0x2551db=document[_0x14680f(0xcb)](_0x14680f(0xa1))[_0x14680f(0x90)],_0x2ad8d7=document['getElementById'](_0x1d1f98[_0x14680f(0xe2)])[_0x14680f(0x90)];return _0x2551db&&_0x2ad8d7&&_0x1d1f98[_0x14680f(0xe1)](_0x2ad8d7,_0x2551db)&&(document[_0x14680f(0xcb)](_0x14680f(0xbd))['classList'][_0x14680f(0xbb)](_0x14680f(0xca)),document[_0x14680f(0xcb)](_0x14680f(0xde))[_0x14680f(0xd7)]=_0x1d1f98[_0x14680f(0xf8)],document[_0x14680f(0xcb)](_0x1d1f98[_0x14680f(0xe3)])[_0x14680f(0xfa)][_0x14680f(0xd0)]=_0x14680f(0x105),_0x396354=![]),_0x396354;}function collectData(){const _0x33976d=a0_0x30bb73,_0x20039b={'NXepd':function(_0x8ecffe,_0x444d9f){return _0x8ecffe(_0x444d9f);},'rbRBf':_0x33976d(0xc1)},_0x39ac56=_0x357407=>document[_0x33976d(0xcb)](_0x357407)?.[_0x33976d(0x90)]||'';return{'timestamp':new Date()[_0x33976d(0x8d)](_0x33976d(0xb1)),'nombre':_0x20039b[_0x33976d(0xc2)](_0x39ac56,'nombre'),'establecimiento':_0x39ac56(_0x20039b[_0x33976d(0xf2)]),'ubicacion':_0x39ac56(_0x33976d(0xf6)),'paraje':_0x39ac56(_0x33976d(0xb9)),'celular':_0x39ac56(_0x33976d(0xb6)),'fin_partos':_0x39ac56(_0x33976d(0xa3)),'inicio_servicios':_0x39ac56('inicio_servicios'),'fin_servicios':_0x20039b[_0x33976d(0xc2)](_0x39ac56,_0x33976d(0xbd)),'brucelosis':risks[_0x33976d(0x9f)]||'','neospora':risks['neospora']||'','garrapatas':risks['garrapatas']||'','tristeza':risks['tristeza']||'','carbunco':risks[_0x33976d(0xdf)]||'','paramphistomum':risks['paramphistomum']||'','saguaype':risks[_0x33976d(0xe9)]||'','mosca':risks[_0x33976d(0xcc)]||'','haemolyticum':risks[_0x33976d(0xb8)]||'','castracion':risks[_0x33976d(0x94)]||''};}document[a0_0x30bb73(0xcb)](a0_0x30bb73(0xa6))[a0_0x30bb73(0xc5)]('submit',async function(_0x94129b){const _0x26aebe=a0_0x30bb73,_0xeb3fe5={'uICdd':'smooth','iUMyH':'btnSubmit','xCTLY':_0x26aebe(0xd3),'vHjtd':'block','oiUBS':function(_0x14dba2,_0x219f76){return _0x14dba2(_0x219f76);},'XSKUL':_0x26aebe(0xd2),'KNTQz':_0x26aebe(0x103),'jtvtv':_0x26aebe(0xeb)};_0x94129b[_0x26aebe(0xe7)]();const _0x2972c5=document['getElementById'](_0x26aebe(0x96));_0x2972c5[_0x26aebe(0xc0)]=_0x26aebe(0xdd);if(!validate()){_0x2972c5[_0x26aebe(0xc0)]=_0x26aebe(0xeb),_0x2972c5[_0x26aebe(0xd7)]=_0x26aebe(0xcf),window[_0x26aebe(0x108)]({'top':0x0,'behavior':_0xeb3fe5[_0x26aebe(0x8f)]});return;}const _0x53023b=document['getElementById'](_0xeb3fe5[_0x26aebe(0xaa)]),_0x20af52=document[_0x26aebe(0xcb)](_0x26aebe(0xfd)),_0x59244b=document[_0x26aebe(0xcb)](_0x26aebe(0xf1)),_0x4d89fb=document[_0x26aebe(0xcb)](_0xeb3fe5[_0x26aebe(0x98)]);_0x53023b[_0x26aebe(0x97)]=!![],_0x59244b[_0x26aebe(0xfa)][_0x26aebe(0xd0)]='none',_0x4d89fb[_0x26aebe(0xfa)]['display']=_0xeb3fe5[_0x26aebe(0xc8)],_0x20af52['textContent']=_0x26aebe(0xed);const _0x2541b5=collectData();try{if(GOOGLE_SCRIPT_URL[_0x26aebe(0xb4)]('TU_ID'))await new Promise(_0x3b41a2=>setTimeout(_0x3b41a2,0x5dc)),_0xeb3fe5[_0x26aebe(0xa7)](showSuccess,_0x2541b5[_0x26aebe(0x104)]);else{const _0x2d03bb=new FormData();Object['entries'](_0x2541b5)[_0x26aebe(0xf0)](([_0x5331ef,_0x2a85b4])=>_0x2d03bb[_0x26aebe(0x102)](_0x5331ef,_0x2a85b4));const _0x4aabcc=await fetch(GOOGLE_SCRIPT_URL,{'method':_0xeb3fe5['XSKUL'],'body':_0x2d03bb}),_0x2a66a9=await _0x4aabcc[_0x26aebe(0xdb)]();if(_0x2a66a9[_0x26aebe(0xbc)]===_0x26aebe(0x106))_0xeb3fe5['oiUBS'](showSuccess,_0x2541b5[_0x26aebe(0x104)]);else throw new Error(_0x2a66a9['message']||'Error\x20desconocido');}}catch(_0x139667){const _0x255204=_0xeb3fe5[_0x26aebe(0xef)][_0x26aebe(0x9c)]('|');let _0x303e1d=0x0;while(!![]){switch(_0x255204[_0x303e1d++]){case'0':window[_0x26aebe(0x108)]({'top':0x0,'behavior':_0x26aebe(0xf4)});continue;case'1':_0x4d89fb[_0x26aebe(0xfa)]['display']=_0x26aebe(0x8e);continue;case'2':_0x2972c5[_0x26aebe(0xd7)]=_0x26aebe(0xa9);continue;case'3':_0x2972c5[_0x26aebe(0xc0)]=_0xeb3fe5[_0x26aebe(0x9e)];continue;case'4':_0x20af52[_0x26aebe(0xd7)]=_0x26aebe(0xa4);continue;case'5':_0x59244b[_0x26aebe(0xfa)][_0x26aebe(0xd0)]=_0x26aebe(0x105);continue;case'6':_0x53023b['disabled']=![];continue;}break;}}});function showSuccess(_0x47f0a6){const _0x34c445=a0_0x30bb73,_0x4903d0={'asYRe':function(_0x2bb995){return _0x2bb995();},'rlHMi':_0x34c445(0xbf),'lqkJM':_0x34c445(0xf4)},_0x22c7da=_0x4903d0[_0x34c445(0xa5)](collectData);document[_0x34c445(0xcb)]('mainForm')[_0x34c445(0xfa)][_0x34c445(0xd0)]='none',document[_0x34c445(0xcb)]('progressFill')[_0x34c445(0xfa)][_0x34c445(0x91)]=_0x34c445(0xc4);const _0xff90f9=document[_0x34c445(0xcb)](_0x4903d0['rlHMi']);_0xff90f9['style'][_0x34c445(0xd0)]=_0x34c445(0x105),document[_0x34c445(0xcb)]('successNombre')[_0x34c445(0xd7)]=_0x47f0a6,window[_0x34c445(0x108)]({'top':0x0,'behavior':_0x4903d0[_0x34c445(0xe6)]});const _0x2a2391=new URLSearchParams();Object['entries'](_0x22c7da)[_0x34c445(0xf0)](([_0x527c37,_0x464caa])=>_0x2a2391[_0x34c445(0x102)](_0x527c37,_0x464caa)),setTimeout(()=>{const _0x1d43a0=_0x34c445;window[_0x1d43a0(0xae)][_0x1d43a0(0x92)]=_0x1d43a0(0xd6)+_0x2a2391[_0x1d43a0(0xd8)]();},0x7d0);}function resetForm(){const _0x3b50da=a0_0x30bb73,_0x1cf6fa={'lXYmv':_0x3b50da(0x8e),'azVCT':_0x3b50da(0xdc),'xeUFG':_0x3b50da(0xf4),'pPrZU':_0x3b50da(0xdd)},_0x32c19b=_0x3b50da(0x8a)[_0x3b50da(0x9c)]('|');let _0x15f08c=0x0;while(!![]){switch(_0x32c19b[_0x15f08c++]){case'0':Object[_0x3b50da(0x107)](risks)[_0x3b50da(0xf0)](_0x3dcbcd=>risks[_0x3dcbcd]=null);continue;case'1':document[_0x3b50da(0xcb)](_0x3b50da(0xbf))[_0x3b50da(0xfa)][_0x3b50da(0xd0)]=_0x1cf6fa[_0x3b50da(0xe4)];continue;case'2':document[_0x3b50da(0xcb)](_0x1cf6fa[_0x3b50da(0x9b)])[_0x3b50da(0xfa)][_0x3b50da(0x91)]='0%';continue;case'3':window[_0x3b50da(0x108)]({'top':0x0,'behavior':_0x1cf6fa[_0x3b50da(0xe8)]});continue;case'4':document[_0x3b50da(0xcb)](_0x3b50da(0xa6))[_0x3b50da(0xee)]();continue;case'5':document[_0x3b50da(0xcb)]('mainForm')['style']['display']='block';continue;case'6':document['querySelectorAll'](_0x3b50da(0xd5))[_0x3b50da(0xf0)](_0x15a2c6=>_0x15a2c6[_0x3b50da(0xab)][_0x3b50da(0x93)](_0x3b50da(0xb2)));continue;case'7':document[_0x3b50da(0xc9)](_0x3b50da(0xac))[_0x3b50da(0xf0)](_0x1ffeba=>{const _0x18c7da=_0x3b50da;_0x1ffeba[_0x18c7da(0xab)]['remove']('filled',_0x18c7da(0xca));});continue;case'8':document['getElementById'](_0x3b50da(0x96))[_0x3b50da(0xc0)]=_0x1cf6fa[_0x3b50da(0xfc)];continue;case'9':document[_0x3b50da(0xc9)](_0x3b50da(0x9a))['forEach'](_0x25e3a8=>_0x25e3a8[_0x3b50da(0xfa)][_0x3b50da(0xd0)]='none');continue;case'10':document[_0x3b50da(0xc9)]('.yn-btn')[_0x3b50da(0xf0)](_0x4cca11=>_0x4cca11['classList']['remove'](_0x3b50da(0xb5),_0x3b50da(0xe0)));continue;}break;}}</script>
+</body>
+</html>

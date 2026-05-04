@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Sanitario — Calendario</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --verde: #1a7a55;
+  --verde-claro: #e8f5ef;
+  --verde-oscuro: #0d5238;
+  --tierra: #8b6914;
+  --tierra-claro: #fdf3e0;
+  --rojo: #c0392b;
+  --rojo-claro: #fdf0ee;
+  --azul: #1a5fa8;
+  --azul-claro: #e8f0fb;
+  --violeta: #6b3fa0;
+  --violeta-claro: #f0eafa;
+  --naranja: #c05c1a;
+  --naranja-claro: #fdf0e8;
+  --gris: #5a5a5a;
+  --gris-claro: #f5f4f1;
+  --borde: #d8d4cc;
+  --texto: #1c1c1a;
+  --blanco: #fefefe;
+  --sombra: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #f0ede6;
+  min-height: 100vh;
+  color: var(--texto);
+  padding: 2rem 1rem 4rem;
+}
+.container { max-width: 860px; margin: 0 auto; }
+
+/* HEADER */
+.header { text-align: center; margin-bottom: 2rem; }
+.logo-icon {
+  width: 60px; height: 60px; background: var(--verde);
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 0.75rem;
+  box-shadow: 0 4px 20px rgba(26,122,85,0.3);
+}
+.logo-nombre { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--verde-oscuro); }
+.logo-sub { font-size: 13px; color: var(--gris); margin-top: 2px; }
+
+/* PRODUCTOR INFO */
+.productor-card {
+  background: var(--blanco); border-radius: 14px;
+  border: 0.5px solid var(--borde); padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem; box-shadow: var(--sombra);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.productor-info h2 { font-family: 'Lora', serif; font-size: 18px; font-weight: 500; color: var(--texto); }
+.productor-info p { font-size: 13px; color: var(--gris); margin-top: 2px; }
+.btn-pdf {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--verde); color: white; border: none;
+  border-radius: 10px; padding: 10px 20px; font-size: 14px;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  cursor: pointer; transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.btn-pdf:hover { background: var(--verde-oscuro); transform: translateY(-1px); }
+.btn-pdf svg { width: 16px; height: 16px; }
+
+/* TABS */
+.tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+.tab {
+  padding: 8px 20px; border-radius: 8px; border: 1px solid var(--borde);
+  background: var(--blanco); font-size: 13.5px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; color: var(--gris);
+  transition: all 0.18s;
+}
+.tab.active { background: var(--verde); color: white; border-color: var(--verde); font-weight: 500; }
+
+/* LEYENDA */
+.leyenda {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 1.25rem;
+}
+.leyenda-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--gris);
+}
+.leyenda-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* VISTA ANUAL */
+.anual-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.mes-card {
+  background: var(--blanco); border-radius: 12px;
+  border: 0.5px solid var(--borde); padding: 1rem;
+  box-shadow: var(--sombra);
+}
+.mes-nombre {
+  font-family: 'Lora', serif; font-size: 14px; font-weight: 600;
+  color: var(--verde-oscuro); margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem; border-bottom: 0.5px solid var(--borde);
+}
+.mes-vacio { font-size: 12px; color: #bbb; font-style: italic; }
+.evento-pill {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin-bottom: 5px;
+}
+.evento-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.evento-texto { font-size: 11.5px; color: var(--texto); line-height: 1.4; }
+.evento-fecha { font-size: 10px; color: var(--gris); display: block; }
+
+/* VISTA MENSUAL */
+.mensual-wrap { display: none; }
+.mes-detalle {
+  background: var(--blanco); border-radius: 14px;
+  border: 0.5px solid var(--borde); padding: 1.5rem;
+  margin-bottom: 1rem; box-shadow: var(--sombra);
+}
+.mes-detalle-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 1rem; padding-bottom: 0.75rem;
+  border-bottom: 0.5px solid var(--borde);
+}
+.mes-num {
+  width: 36px; height: 36px; background: var(--verde-claro);
+  border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-weight: 600; font-size: 14px;
+  color: var(--verde-oscuro); flex-shrink: 0;
+}
+.mes-detalle-nombre { font-family: 'Lora', serif; font-size: 17px; font-weight: 500; }
+.evento-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 0.5px solid var(--gris-claro);
+}
+.evento-row:last-child { border-bottom: none; padding-bottom: 0; }
+.evento-cat-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 3px;
+}
+.evento-det { flex: 1; }
+.evento-det strong { font-size: 13.5px; font-weight: 500; display: block; color: var(--texto); }
+.evento-det span { font-size: 12px; color: var(--gris); line-height: 1.5; display: block; margin-top: 2px; }
+.evento-det .fecha-tag, .evento-det div.fecha-tag {
+  display: block;
+  background: var(--gris-claro);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--gris);
+  margin-top: 6px;
+  width: fit-content;
+  clear: both;
+}
+
+/* CATEGORIAS */
+.cat-vacunacion { background: #1a5fa8; }
+.cat-endo { background: #6b3fa0; }
+.cat-ecto { background: #c05c1a; }
+.cat-manejo { background: #1a7a55; }
+.cat-veterinario { background: #c0392b; }
+
+/* NO EVENTOS */
+.no-eventos { font-size: 13px; color: #bbb; font-style: italic; padding: 0.5rem 0; }
+
+.mes-pasado { opacity: 0.8; border-left: 3px solid #d8d4cc; }
+
+/* LOADING */
+.loading {
+  text-align: center; padding: 4rem 2rem;
+  background: var(--blanco); border-radius: 14px;
+  border: 0.5px solid var(--borde);
+}
+.loading p { color: var(--gris); font-size: 14px; margin-top: 1rem; }
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .anual-grid { grid-template-columns: 1fr 1fr; }
+  .productor-card { flex-direction: column; }
+  .tabs { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <img src="logo.jpeg" alt="Más Fértil" style="width:140px;height:auto;display:block;margin:0 auto 0.5rem;mix-blend-mode:multiply;" onerror="this.style.display='none';" />
+    <div class="logo-nombre">Plan Sanitario Ganadero</div>
+    <div class="logo-sub">Calendario de actividades personalizado</div>
+  </div>
+
+  <!-- PANEL AFTOSA -->
+  <div id="aftosaPanel" style="background:white;border-radius:14px;border:0.5px solid #d8d4cc;padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:0.5px solid #d8d4cc;">
+      <div style="width:36px;height:36px;border-radius:10px;background:#e8f0fb;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a5fa8" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div style="font-family:'Lora',serif;font-size:15px;font-weight:500;">Fechas Fiebre Aftosa</div>
+        <div style="font-size:12px;color:#5a5a5a;">Ingresá las fechas de cada período de vacunación (MGAP)</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#1a5fa8;">1º Período</div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de inicio</label>
+        <input type="date" id="aftosa1inicio" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de fin</label>
+        <input type="date" id="aftosa1fin" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+      <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#1a5fa8;margin-top:6px;">2º Período</div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de inicio</label>
+        <input type="date" id="aftosa2inicio" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de fin</label>
+        <input type="date" id="aftosa2fin" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+    </div>
+  </div>
+
+  <div id="mainContent">
+    <div class="loading">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1a7a55" stroke-width="2">
+        <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32">
+          <animate attributeName="stroke-dashoffset" values="32;0" dur="1s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      <p>Calculando tu plan sanitario...</p>
+    </div>
+  </div>
+
+</div>
+
+<script>const a0_0x38cfcd=a0_0x4ecb;(function(_0x11a948,_0x747c0e){const _0x3a1885=a0_0x4ecb,_0x3cb609=_0x11a948();while(!![]){try{const _0x229c9b=-parseInt(_0x3a1885(0x149))/0x1+parseInt(_0x3a1885(0xdc))/0x2+parseInt(_0x3a1885(0x11e))/0x3*(parseInt(_0x3a1885(0xe8))/0x4)+parseInt(_0x3a1885(0x1ad))/0x5+-parseInt(_0x3a1885(0xfb))/0x6*(parseInt(_0x3a1885(0xf0))/0x7)+parseInt(_0x3a1885(0x141))/0x8*(-parseInt(_0x3a1885(0x1a8))/0x9)+-parseInt(_0x3a1885(0xf5))/0xa;if(_0x229c9b===_0x747c0e)break;else _0x3cb609['push'](_0x3cb609['shift']());}catch(_0x27d10b){_0x3cb609['push'](_0x3cb609['shift']());}}}(a0_0x3d5d,0x2491d));const a0_0x21b6fb=(function(){let _0x48180c=!![];return function(_0x391911,_0x2249a8){const _0x42b92e=_0x48180c?function(){const _0x36b979=a0_0x4ecb;if(_0x2249a8){const _0x46c39c=_0x2249a8[_0x36b979(0x115)](_0x391911,arguments);return _0x2249a8=null,_0x46c39c;}}:function(){};return _0x48180c=![],_0x42b92e;};}()),a0_0x3eddbd=a0_0x21b6fb(this,function(){const _0x70f597=a0_0x4ecb;return a0_0x3eddbd['toString']()[_0x70f597(0x15a)]('(((.+)+)+)+$')[_0x70f597(0x15d)]()[_0x70f597(0x1b6)](a0_0x3eddbd)[_0x70f597(0x15a)](_0x70f597(0x1b8));});a0_0x3eddbd();const {jsPDF}=window[a0_0x38cfcd(0x194)],COLORES={'vacunacion':{'hex':a0_0x38cfcd(0x192),'claro':'#e8f0fb','nombre':a0_0x38cfcd(0xc0)},'endo':{'hex':a0_0x38cfcd(0x11a),'claro':a0_0x38cfcd(0x13e),'nombre':'Endoparásitos'},'ecto':{'hex':'#c05c1a','claro':a0_0x38cfcd(0xce),'nombre':'Ectoparásitos'},'manejo':{'hex':'#1a7a55','claro':a0_0x38cfcd(0x1a0),'nombre':a0_0x38cfcd(0x174)},'veterinario':{'hex':a0_0x38cfcd(0x113),'claro':'#fdf0ee','nombre':a0_0x38cfcd(0x164)}},MESES=[a0_0x38cfcd(0x10a),a0_0x38cfcd(0x150),a0_0x38cfcd(0x1cc),a0_0x38cfcd(0x1b0),a0_0x38cfcd(0x186),a0_0x38cfcd(0x161),a0_0x38cfcd(0xe0),a0_0x38cfcd(0x11f),'Septiembre','Octubre',a0_0x38cfcd(0xd9),a0_0x38cfcd(0xd8)];function getParams(){const _0x525e46=a0_0x38cfcd,_0x274ea0={'Hmrkh':_0x525e46(0x14f),'BZxlv':_0x525e46(0xa4),'lxbvO':_0x525e46(0x165),'lpkxC':_0x525e46(0x109),'EVpzB':_0x525e46(0xc5)},_0x3d772f=new URLSearchParams(window[_0x525e46(0x151)][_0x525e46(0x15a)]);return{'nombre':_0x3d772f[_0x525e46(0x123)]('nombre')||_0x525e46(0x129),'establecimiento':_0x3d772f['get'](_0x525e46(0xf2))||_0x525e46(0x8b),'ubicacion':_0x3d772f[_0x525e46(0x123)]('ubicacion')||'','paraje':_0x3d772f[_0x525e46(0x123)]('paraje')||'','celular':_0x3d772f[_0x525e46(0x123)](_0x525e46(0x93))||'','fin_partos':_0x3d772f[_0x525e46(0x123)]('fin_partos')||'','inicio_servicios':_0x3d772f['get'](_0x274ea0['Hmrkh'])||'','fin_servicios':_0x3d772f[_0x525e46(0x123)](_0x274ea0[_0x525e46(0x111)])||'','brucelosis':_0x3d772f[_0x525e46(0x123)]('brucelosis')||'no','neospora':_0x3d772f[_0x525e46(0x123)]('neospora')||'no','garrapatas':_0x3d772f[_0x525e46(0x123)](_0x525e46(0x199))||'no','tristeza':_0x3d772f['get'](_0x525e46(0x104))||'no','carbunco':_0x3d772f[_0x525e46(0x123)]('carbunco')||'no','paramphistomum':_0x3d772f[_0x525e46(0x123)](_0x274ea0[_0x525e46(0xf4)])||'no','saguaype':_0x3d772f['get']('saguaype')||'no','mosca':_0x3d772f['get'](_0x525e46(0xea))||'no','haemolyticum':_0x3d772f[_0x525e46(0x123)]('haemolyticum')||'no','castracion':_0x3d772f[_0x525e46(0x123)](_0x274ea0[_0x525e46(0xf9)])||'no','aftosa1inicio':_0x3d772f[_0x525e46(0x123)]('aftosa1inicio')||'','aftosa1fin':_0x3d772f[_0x525e46(0x123)](_0x525e46(0x16e))||'','aftosa2inicio':_0x3d772f['get'](_0x274ea0[_0x525e46(0x182)])||'','aftosa2fin':_0x3d772f[_0x525e46(0x123)](_0x525e46(0xf6))||''};}function a0_0x4ecb(_0x235efe,_0x2f4d0d){_0x235efe=_0x235efe-0x88;const _0x3f07c5=a0_0x3d5d();let _0x3eddbd=_0x3f07c5[_0x235efe];if(a0_0x4ecb['PTLWiv']===undefined){var _0x21b6fb=function(_0x57eeb9){const _0x5cb6e9='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x35c50d='',_0x33b7e0='',_0x323033=_0x35c50d+_0x21b6fb,_0x2f1c1c=(''+function(){return 0x0;})['indexOf']('\x0a')!==-0x1;for(let _0x106165=0x0,_0x178287,_0x3b9670,_0x2ce3ad=0x0;_0x3b9670=_0x57eeb9['charAt'](_0x2ce3ad++);~_0x3b9670&&(_0x178287=_0x106165%0x4?_0x178287*0x40+_0x3b9670:_0x3b9670,_0x106165++%0x4)?_0x35c50d+=_0x2f1c1c||_0x323033['charCodeAt'](_0x2ce3ad+0xa)-0xa!==0x0?String['fromCharCode'](0xff&_0x178287>>(-0x2*_0x106165&0x6)):_0x106165:0x0){_0x3b9670=_0x5cb6e9['indexOf'](_0x3b9670);}for(let _0x186979=0x0,_0x526aac=_0x35c50d['length'];_0x186979<_0x526aac;_0x186979++){_0x33b7e0+='%'+('00'+_0x35c50d['charCodeAt'](_0x186979)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x33b7e0);};a0_0x4ecb['ayNQBc']=_0x21b6fb,a0_0x4ecb['xXSmtv']={},a0_0x4ecb['PTLWiv']=!![];}const _0x3d5d30=_0x3f07c5[0x0],_0x4ecb35=_0x235efe+_0x3d5d30,_0x3f751f=a0_0x4ecb['xXSmtv'][_0x4ecb35];if(!_0x3f751f){const _0x4ed4e5=function(_0x4084b9){this['yEdaHe']=_0x4084b9,this['tfvEnb']=[0x1,0x0,0x0],this['EIuQgn']=function(){return'newState';},this['GYZZrH']='\x5cw+\x20*\x5c(\x5c)\x20*{\x5cw+\x20*',this['OuTRyh']='[\x27|\x22].+[\x27|\x22];?\x20*}';};_0x4ed4e5['prototype']['LInqpX']=function(){const _0x7a4832=new RegExp(this['GYZZrH']+this['OuTRyh']),_0x6044fe=_0x7a4832['test'](this['EIuQgn']['toString']())?--this['tfvEnb'][0x1]:--this['tfvEnb'][0x0];return this['NMYOlA'](_0x6044fe);},_0x4ed4e5['prototype']['NMYOlA']=function(_0x2069b6){if(!Boolean(~_0x2069b6))return _0x2069b6;return this['ZeNtbK'](this['yEdaHe']);},_0x4ed4e5['prototype']['ZeNtbK']=function(_0x274da1){for(let _0x154fc4=0x0,_0x19d1e8=this['tfvEnb']['length'];_0x154fc4<_0x19d1e8;_0x154fc4++){this['tfvEnb']['push'](Math['round'](Math['random']())),_0x19d1e8=this['tfvEnb']['length'];}return _0x274da1(this['tfvEnb'][0x0]);},(''+function(){return 0x0;})['indexOf']('\x0a')===-0x1&&new _0x4ed4e5(a0_0x4ecb)['LInqpX'](),_0x3eddbd=a0_0x4ecb['ayNQBc'](_0x3eddbd),a0_0x4ecb['xXSmtv'][_0x4ecb35]=_0x3eddbd;}else _0x3eddbd=_0x3f751f;return _0x3eddbd;}function parseDate(_0xd7fc87){const _0x1bf724=a0_0x38cfcd;if(!_0xd7fc87)return null;const [_0x455491,_0x337672,_0x571b8a]=_0xd7fc87[_0x1bf724(0x178)]('-')[_0x1bf724(0x118)](Number);return new Date(_0x455491,_0x337672-0x1,_0x571b8a);}function addDays(_0x3e59c6,_0x28ec08){const _0x48f912=a0_0x38cfcd,_0x50d178=new Date(_0x3e59c6);return _0x50d178[_0x48f912(0xfe)](_0x50d178['getDate']()+_0x28ec08),_0x50d178;}function formatDate(_0x4a9f21){const _0x2b5431=a0_0x38cfcd;if(!_0x4a9f21)return'';return _0x4a9f21['toLocaleDateString']('es-UY',{'day':_0x2b5431(0x91),'month':'short'});}function mesAnio(_0x5a68b0){const _0x284305=a0_0x38cfcd;if(!_0x5a68b0)return null;return{'mes':_0x5a68b0[_0x284305(0x16f)](),'anio':_0x5a68b0['getFullYear']()};}function proximoMes(_0xf2bb55){const _0x37d12f=a0_0x38cfcd,_0x2cfbbc={'DiGAT':function(_0x1c3ed9,_0x324e23){return _0x1c3ed9-_0x324e23;}},_0x2d2c3f=new Date();let _0x7a973f=_0x2d2c3f['getFullYear']();if(_0xf2bb55<_0x2cfbbc['DiGAT'](_0x2d2c3f[_0x37d12f(0x16f)](),0x1))_0x7a973f++;return new Date(_0x7a973f,_0xf2bb55,0x1);}function calcularPlan(_0x4961e8){const _0x1a66d4=a0_0x38cfcd,_0x13595f={'HquDz':_0x1a66d4(0xe9),'uPhCM':_0x1a66d4(0x13d),'WDqQr':'Tratar\x20contra\x20tercera\x20generación\x20de\x20garrapatas\x20con\x20una\x20familia\x20de\x20garrapaticida\x20que\x20no\x20usó\x20para\x20generación\x201\x20y\x202.\x20Consulte\x20a\x20su\x20veterinario.','jDydi':function(_0x3753f6,_0x1a1a24){return _0x3753f6(_0x1a1a24);},'cZXuI':_0x1a66d4(0xac),'tKQIn':function(_0x3b31b2,_0x3d305d){return _0x3b31b2(_0x3d305d);},'xLHsr':function(_0x1c0371,_0x1bf472,_0x2e5b13){return _0x1c0371(_0x1bf472,_0x2e5b13);},'EqDLE':_0x1a66d4(0x187),'QQwrn':function(_0x4b8fa8,_0x22b65a){return _0x4b8fa8+_0x22b65a;},'vtXpX':_0x1a66d4(0x1ab),'uutlS':_0x1a66d4(0x131),'waWCm':function(_0x4be00d,_0x4bdbbd){return _0x4be00d(_0x4bdbbd);},'PsOzk':_0x1a66d4(0xe6),'buQLp':'Revacunación\x20contra\x20enfermedades\x20respiratorias\x20y\x20oculares\x20—\x202ª\x20dosis\x20(terneros/as)','WhQfs':_0x1a66d4(0x1bd),'byNRm':'Realizar\x20diagnóstico\x20por\x20ecografía\x20de\x20vientres\x20en\x20servicio\x20y\x20vacunación\x20de\x20hembras\x20preñadas\x20para\x20evitar\x20abortos.','kWGRd':function(_0xd5b409,_0x150c0a,_0x4c6450){return _0xd5b409(_0x150c0a,_0x4c6450);},'KKCXS':_0x1a66d4(0xad),'yUMfA':function(_0x3319d2,_0x292f29,_0xb48380){return _0x3319d2(_0x292f29,_0xb48380);},'rBSwz':_0x1a66d4(0x179),'BQgrw':_0x1a66d4(0x128),'nPhre':function(_0x220450,_0x18c7c8){return _0x220450===_0x18c7c8;},'jzcrg':function(_0x11d7e1,_0x54a3f6){return _0x11d7e1(_0x54a3f6);},'ITWYP':_0x1a66d4(0x130),'FUvpC':function(_0x5b3533,_0x25120a){return _0x5b3533===_0x25120a;},'FpHIi':_0x1a66d4(0x108),'omPOO':'Trematode\x20ruminal.\x20Tratar\x20animales\x20afectados.\x20Ante\x20la\x20duda\x20realice\x20análisis\x20coprológico.\x20Tratamiento\x20recomendado:\x20Oxiclozanide\x2020%.','FHfbS':_0x1a66d4(0xdf),'niJfg':_0x1a66d4(0x175),'rojsK':'Inicio\x20del\x201º\x20período\x20de\x20vacunación\x20obligatoria\x20contra\x20Fiebre\x20Aftosa\x20(MGAP).\x20Todos\x20los\x20bovinos.','zrdTm':_0x1a66d4(0x1a1),'qmNVN':_0x1a66d4(0x147)},_0x23e186=[],_0x332443=parseDate(_0x4961e8[_0x1a66d4(0x152)]),_0x52f0c8=parseDate(_0x4961e8[_0x1a66d4(0xa4)]),_0x5223a6=_0x13595f[_0x1a66d4(0xeb)](parseDate,_0x4961e8[_0x1a66d4(0x14f)]);if(_0x332443){const _0x33b94b=_0x13595f[_0x1a66d4(0x16b)](addDays,_0x332443,0x5a),_0x4e356b=addDays(_0x332443,0x78),_0x204add=_0x4961e8['castracion']==='si'?_0x1a66d4(0xa3):'',_0x2db87f=_0x4961e8[_0x1a66d4(0x1be)]==='si'?_0x13595f[_0x1a66d4(0x19b)]:'';_0x23e186['push']({'fecha':_0x33b94b,'titulo':_0x1a66d4(0x117),'descripcion':_0x13595f['QQwrn']('Vacunar\x20terneros/as\x20contra\x20enfermedades\x20clostridiales.\x20Revacunar\x20a\x20los\x2020-30\x20días\x20para\x20buena\x20inmunidad\x20previo\x20al\x20destete/castración.\x20Animales\x20vacunados\x20el\x20año\x20pasado\x20solo\x20necesitan\x20una\x20dosis.'+_0x204add,_0x2db87f),'categoria':_0x1a66d4(0xac)}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x33b94b,'titulo':_0x13595f[_0x1a66d4(0x1ae)],'descripcion':_0x1a66d4(0x8d),'categoria':_0x1a66d4(0xac)}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x4e356b,'titulo':_0x13595f[_0x1a66d4(0x121)],'descripcion':_0x1a66d4(0x11d)+_0x204add,'categoria':'vacunacion'}),_0x4961e8['brucelosis']==='si'&&(_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x13595f[_0x1a66d4(0x198)](proximoMes,0x5),'titulo':_0x1a66d4(0x1cb),'descripcion':_0x1a66d4(0x177),'categoria':_0x13595f[_0x1a66d4(0x195)]}),_0x23e186['push']({'fecha':proximoMes(0x8),'titulo':_0x1a66d4(0x1bc),'descripcion':_0x13595f[_0x1a66d4(0x1c7)],'categoria':_0x13595f[_0x1a66d4(0x195)]})),_0x23e186['push']({'fecha':proximoMes(0x2),'titulo':_0x1a66d4(0xc1),'descripcion':'Vacunar\x20terneros/as\x20contra\x20enfermedades\x20respiratorias\x20(IBR,\x20DVB,\x20PI3,\x20BRSV)\x20y\x20queratoconjuntivitis\x20infecciosa\x20bovina.\x20Primera\x20dosis\x20en\x20marzo.\x20Puede\x20vacunar\x20junto\x20a\x20otras\x20vacunas\x20si\x20lo\x20realiza\x20en\x20el\x20mismo\x20día,\x20preferentemente\x20del\x20otro\x20lado\x20de\x20la\x20tabla\x20del\x20cuello.','categoria':_0x1a66d4(0xac)}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':proximoMes(0x3),'titulo':_0x13595f[_0x1a66d4(0xfc)],'descripcion':_0x1a66d4(0xc3),'categoria':_0x1a66d4(0xac)});}if(_0x52f0c8){const _0x340c16=addDays(_0x52f0c8,0x2d);_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x340c16,'titulo':_0x13595f[_0x1a66d4(0xa7)],'descripcion':_0x13595f[_0x1a66d4(0x169)],'categoria':_0x1a66d4(0x12d)});}_0x5223a6&&(_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x13595f[_0x1a66d4(0x10f)](addDays,_0x5223a6,-0x50),'titulo':_0x1a66d4(0x98),'descripcion':_0x1a66d4(0x188),'categoria':_0x1a66d4(0x12d)}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':addDays(_0x5223a6,-0x3c),'titulo':_0x1a66d4(0x13b),'descripcion':'Primera\x20dosis\x20de\x20vacuna\x20reproductiva\x20para\x20vaquillonas\x20que\x20ingresan\x20al\x20servicio.\x20Se\x20requieren\x202\x20dosis\x20para\x20lograr\x20inmunidad\x20adecuada\x20y\x20evitar\x20pérdidas\x20embrionarias\x20y\x20abortos.','categoria':_0x1a66d4(0xac)}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':addDays(_0x5223a6,-0x1e),'titulo':_0x1a66d4(0xf7),'descripcion':_0x13595f[_0x1a66d4(0x172)],'categoria':_0x1a66d4(0xac)}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x13595f[_0x1a66d4(0xb7)](addDays,_0x5223a6,-0x1e),'titulo':_0x1a66d4(0x10c),'descripcion':_0x1a66d4(0x13a),'categoria':'manejo'}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x13595f[_0x1a66d4(0x198)](proximoMes,0x0),'titulo':_0x13595f[_0x1a66d4(0xf1)],'descripcion':_0x13595f[_0x1a66d4(0x143)],'categoria':_0x1a66d4(0x12d)}));if(_0x4961e8[_0x1a66d4(0x157)]==='si'){const _0x143e31=proximoMes(0x8);_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x143e31,'titulo':_0x1a66d4(0x14b),'descripcion':_0x1a66d4(0xb5),'categoria':_0x13595f[_0x1a66d4(0x195)]});}if(_0x4961e8[_0x1a66d4(0xea)]==='si'){const _0x3cf078=proximoMes(0xb);_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x3cf078,'titulo':'Control\x20de\x20Mosca\x20de\x20cuernos','descripcion':_0x1a66d4(0x168),'categoria':_0x1a66d4(0x8a)});}_0x13595f['nPhre'](_0x4961e8[_0x1a66d4(0xc7)],'si')&&(_0x23e186[_0x1a66d4(0xb6)]({'fecha':_0x13595f[_0x1a66d4(0x135)](proximoMes,0x4),'titulo':_0x1a66d4(0x130),'descripcion':'Dosificar\x20al\x20ganado\x20contra\x20saguaypé\x20/\x20distomatosis\x20hepática.\x20Tratamiento\x20recomendado:\x20Triclabendazol\x20(mata\x20estadios\x20más\x20inmaduros).\x20También:\x20Rafoxanida,\x20Closantel,\x20Nitroxinil\x20y\x20Clorsulón.','categoria':_0x1a66d4(0xdf)}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':proximoMes(0xa),'titulo':_0x13595f[_0x1a66d4(0x114)],'descripcion':_0x1a66d4(0xd5),'categoria':'endo'}));_0x13595f[_0x1a66d4(0x193)](_0x4961e8[_0x1a66d4(0x165)],'si')&&(_0x23e186[_0x1a66d4(0xb6)]({'fecha':proximoMes(0x4),'titulo':_0x13595f[_0x1a66d4(0x1a2)],'descripcion':_0x13595f[_0x1a66d4(0x1bb)],'categoria':'endo'}),_0x23e186[_0x1a66d4(0xb6)]({'fecha':proximoMes(0xa),'titulo':_0x13595f[_0x1a66d4(0x1a2)],'descripcion':_0x1a66d4(0x100),'categoria':_0x13595f[_0x1a66d4(0x9d)]}));_0x4961e8[_0x1a66d4(0x199)]==='si'&&([0x7,0x8,0x9]['forEach'](_0x3302a6=>{const _0x342f63=_0x1a66d4;_0x23e186[_0x342f63(0xb6)]({'fecha':proximoMes(_0x3302a6),'titulo':_0x13595f[_0x342f63(0x12c)],'descripcion':_0x342f63(0x1a6),'categoria':_0x342f63(0x8a)});}),[0xa,0xb,0x0][_0x1a66d4(0x1c5)](_0x1a648d=>{const _0x15d62e=_0x1a66d4;_0x23e186[_0x15d62e(0xb6)]({'fecha':proximoMes(_0x1a648d),'titulo':_0x13595f[_0x15d62e(0x14e)],'descripcion':_0x15d62e(0x1c8),'categoria':_0x15d62e(0x8a)});}),[0x1,0x2,0x3,0x4]['forEach'](_0x193af6=>{const _0x434d1a=_0x1a66d4;_0x23e186[_0x434d1a(0xb6)]({'fecha':proximoMes(_0x193af6),'titulo':'Control\x20garrapatas\x20—\x203ª\x20generación','descripcion':_0x13595f['WDqQr'],'categoria':_0x434d1a(0x8a)});}));if(_0x4961e8[_0x1a66d4(0x104)]==='si'&&_0x332443){const _0x19e37a=addDays(_0x332443,0x5a),_0x26531d=addDays(_0x19e37a,0x3c);_0x23e186['push']({'fecha':_0x19e37a,'titulo':_0x1a66d4(0x1c1),'descripcion':_0x1a66d4(0x17e),'categoria':_0x1a66d4(0xac)}),_0x23e186['push']({'fecha':_0x26531d,'titulo':_0x1a66d4(0x101),'descripcion':_0x1a66d4(0x126),'categoria':_0x13595f[_0x1a66d4(0x195)]});}_0x4961e8[_0x1a66d4(0x8f)]==='si'&&[0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8][_0x1a66d4(0x1c5)](_0x5e48ab=>{const _0x2e84fa=_0x1a66d4;_0x23e186['push']({'fecha':_0x13595f[_0x2e84fa(0x155)](proximoMes,_0x5e48ab),'titulo':_0x2e84fa(0xb2),'descripcion':_0x2e84fa(0xfd),'categoria':_0x2e84fa(0x12d)});});(_0x4961e8['paramphistomum']===_0x13595f[_0x1a66d4(0x139)]||_0x4961e8[_0x1a66d4(0xc7)]==='nose')&&[0x4,0x8][_0x1a66d4(0x1c5)](_0x3569fc=>{const _0x2d6480=_0x1a66d4;_0x23e186[_0x2d6480(0xb6)]({'fecha':proximoMes(_0x3569fc),'titulo':_0x2d6480(0x189),'descripcion':_0x2d6480(0x17c),'categoria':_0x2d6480(0x12d)});});_0x4961e8[_0x1a66d4(0xd1)]==='si'&&[0x1,0x5,0x9][_0x1a66d4(0x1c5)](_0x3cdb00=>{const _0x3308e4=_0x1a66d4;_0x23e186[_0x3308e4(0xb6)]({'fecha':_0x13595f[_0x3308e4(0x155)](proximoMes,_0x3cdb00),'titulo':_0x3308e4(0x13c),'descripcion':_0x3308e4(0xa1),'categoria':_0x13595f[_0x3308e4(0x195)]});});const _0x55ab83=[0x0,0x2,0x4,0x6,0x8,0xa];return _0x55ab83[_0x1a66d4(0x1c5)](_0x1a8f43=>{const _0xc1aca9=_0x1a66d4;_0x23e186[_0xc1aca9(0xb6)]({'fecha':proximoMes(_0x1a8f43),'titulo':_0xc1aca9(0x1c3),'descripcion':_0xc1aca9(0x12f),'categoria':_0xc1aca9(0xdf)});}),_0x4961e8[_0x1a66d4(0x10d)]&&_0x23e186['push']({'fecha':parseDate(_0x4961e8['aftosa1inicio']),'titulo':'Fiebre\x20Aftosa\x20—\x201º\x20período,\x20inicio\x20vacunación','descripcion':_0x13595f[_0x1a66d4(0xc8)],'categoria':_0x1a66d4(0xac)}),_0x4961e8['aftosa1fin']&&_0x23e186[_0x1a66d4(0xb6)]({'fecha':parseDate(_0x4961e8[_0x1a66d4(0x16e)]),'titulo':'Fiebre\x20Aftosa\x20—\x201º\x20período,\x20fin\x20vacunación','descripcion':'Fin\x20del\x201º\x20período\x20de\x20vacunación\x20contra\x20Fiebre\x20Aftosa.\x20Verificar\x20que\x20todos\x20los\x20animales\x20hayan\x20sido\x20vacunados.','categoria':_0x1a66d4(0xac)}),!_0x4961e8[_0x1a66d4(0x10d)]&&!_0x4961e8[_0x1a66d4(0x16e)]&&_0x23e186['push']({'fecha':null,'titulo':'Fiebre\x20Aftosa\x20—\x201º\x20período\x20(fechas\x20pendientes)','descripcion':'Ingresar\x20las\x20fechas\x20del\x201º\x20período\x20de\x20vacunación\x20en\x20el\x20panel\x20superior.','categoria':_0x1a66d4(0xac),'sinFecha':!![]}),_0x4961e8[_0x1a66d4(0xc5)]&&_0x23e186['push']({'fecha':parseDate(_0x4961e8['aftosa2inicio']),'titulo':_0x13595f['zrdTm'],'descripcion':_0x1a66d4(0x18c),'categoria':_0x1a66d4(0xac)}),_0x4961e8[_0x1a66d4(0xf6)]&&_0x23e186[_0x1a66d4(0xb6)]({'fecha':parseDate(_0x4961e8['aftosa2fin']),'titulo':_0x1a66d4(0xb1),'descripcion':'Fin\x20del\x202º\x20período\x20de\x20vacunación\x20contra\x20Fiebre\x20Aftosa.\x20Verificar\x20que\x20todos\x20los\x20animales\x20hayan\x20sido\x20vacunados.','categoria':_0x1a66d4(0xac)}),!_0x4961e8['aftosa2inicio']&&!_0x4961e8[_0x1a66d4(0xf6)]&&_0x23e186['push']({'fecha':null,'titulo':_0x1a66d4(0x145),'descripcion':_0x13595f['qmNVN'],'categoria':'vacunacion','sinFecha':!![]}),_0x23e186[_0x1a66d4(0x173)](_0x24748c=>_0x24748c['fecha']||_0x24748c['sinFecha']);}function agruparPorMes(_0x16c4e7){const _0x3e3b0e=a0_0x38cfcd,_0x11c868={'xakSj':function(_0xa852a,_0x46770d){return _0xa852a!==_0x46770d;},'FvihV':function(_0x4fddca,_0x2a2903){return _0x4fddca-_0x2a2903;}},_0x38c69e=new Date(),_0x1017b5={};return _0x16c4e7[_0x3e3b0e(0x1c5)](_0x5c7dfa=>{const _0x14d571=_0x3e3b0e;if(_0x5c7dfa[_0x14d571(0xd3)]){const _0x20e971=_0x38c69e[_0x14d571(0x18a)]()+'-'+String(_0x38c69e['getMonth']())['padStart'](0x2,'0');if(!_0x1017b5[_0x20e971])_0x1017b5[_0x20e971]={'mes':_0x38c69e[_0x14d571(0x16f)](),'anio':_0x38c69e[_0x14d571(0x18a)](),'eventos':[]};_0x1017b5[_0x20e971][_0x14d571(0x158)][_0x14d571(0xb6)](_0x5c7dfa);return;}const _0x4da92a=_0x5c7dfa[_0x14d571(0x112)]['getFullYear']()+'-'+String(_0x5c7dfa[_0x14d571(0x112)][_0x14d571(0x16f)]())['padStart'](0x2,'0');if(!_0x1017b5[_0x4da92a])_0x1017b5[_0x4da92a]={'mes':_0x5c7dfa[_0x14d571(0x112)][_0x14d571(0x16f)](),'anio':_0x5c7dfa[_0x14d571(0x112)]['getFullYear'](),'eventos':[]};_0x1017b5[_0x4da92a]['eventos'][_0x14d571(0xb6)](_0x5c7dfa);}),Object['values'](_0x1017b5)[_0x3e3b0e(0x14c)]((_0x2eedb4,_0x3400d6)=>{const _0x1afbb5=_0x3e3b0e;if(_0x11c868[_0x1afbb5(0x140)](_0x2eedb4[_0x1afbb5(0x18f)],_0x3400d6[_0x1afbb5(0x18f)]))return _0x11c868[_0x1afbb5(0xb3)](_0x2eedb4['anio'],_0x3400d6[_0x1afbb5(0x18f)]);return _0x2eedb4['mes']-_0x3400d6[_0x1afbb5(0xec)];});}function render(_0x4605de,_0x4a7611,_0x41c11f){const _0x3c0a6f=a0_0x38cfcd,_0x4cd640={'ezpyn':function(_0x3106e8,_0x3cac98){return _0x3106e8<_0x3cac98;},'sHWng':function(_0x42af76,_0x316b0b){return _0x42af76===_0x316b0b;},'aPBMN':_0x3c0a6f(0xef),'DAZhu':function(_0x7261f5,_0xdc5231){return _0x7261f5<_0xdc5231;},'wlIYh':_0x3c0a6f(0xe7),'Ueaky':function(_0x2e1d61,_0x535110){return _0x2e1d61+_0x535110;}},_0x1f825c=document[_0x3c0a6f(0x19f)](_0x3c0a6f(0x196));_0x1f825c['innerHTML']=_0x3c0a6f(0x1b9)+_0x4605de[_0x3c0a6f(0xd4)]+_0x3c0a6f(0x1c9)+_0x4605de['establecimiento']+(_0x4605de[_0x3c0a6f(0xa2)]?_0x4cd640[_0x3c0a6f(0x9b)](_0x3c0a6f(0xdd),_0x4605de[_0x3c0a6f(0xa2)]):'')+_0x3c0a6f(0xbe)+Object['entries'](COLORES)[_0x3c0a6f(0x118)](([_0x19e181,_0x1f0e59])=>_0x3c0a6f(0x162)+_0x1f0e59[_0x3c0a6f(0x9c)]+_0x3c0a6f(0x15b)+_0x1f0e59[_0x3c0a6f(0xd4)]+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20')['join']('')+_0x3c0a6f(0x116)+_0x41c11f[_0x3c0a6f(0x118)](_0xebaceb=>{const _0x59245f=_0x3c0a6f,_0x4572d5=new Date(),_0x56b956=_0x4cd640['ezpyn'](_0xebaceb[_0x59245f(0x18f)],_0x4572d5['getFullYear']())||_0x4cd640['sHWng'](_0xebaceb[_0x59245f(0x18f)],_0x4572d5[_0x59245f(0x18a)]())&&_0xebaceb[_0x59245f(0xec)]<_0x4572d5[_0x59245f(0x16f)]();return _0x59245f(0x154)+(_0x56b956?_0x4cd640['aPBMN']:'')+_0x59245f(0x19c)+MESES[_0xebaceb[_0x59245f(0xec)]]+'\x20'+_0xebaceb[_0x59245f(0x18f)]+(_0x56b956?_0x59245f(0x12b):'')+_0x59245f(0x185)+(_0xebaceb[_0x59245f(0x158)][_0x59245f(0xe3)]===0x0?_0x59245f(0x159):_0xebaceb[_0x59245f(0x158)][_0x59245f(0x118)](_0x6edd3d=>_0x59245f(0x97)+(_0x56b956?'#bbb':COLORES[_0x6edd3d[_0x59245f(0x167)]][_0x59245f(0x9c)])+'\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22evento-texto\x22\x20style=\x22'+(_0x56b956?_0x59245f(0xb0):'')+_0x59245f(0xbb)+_0x6edd3d[_0x59245f(0x110)]+_0x59245f(0xcb)+(_0x6edd3d[_0x59245f(0x112)]?_0x59245f(0x10b)+formatDate(_0x6edd3d[_0x59245f(0x112)])+'</span>':'')+_0x59245f(0x119))[_0x59245f(0x134)](''))+_0x59245f(0x191);})[_0x3c0a6f(0x134)]('')+_0x3c0a6f(0x124)+_0x41c11f['map']((_0x37c459,_0x208703)=>{const _0x484128=_0x3c0a6f,_0x493e96=new Date(),_0x43d785=_0x37c459[_0x484128(0x18f)]<_0x493e96[_0x484128(0x18a)]()||_0x37c459[_0x484128(0x18f)]===_0x493e96[_0x484128(0x18a)]()&&_0x4cd640['DAZhu'](_0x37c459[_0x484128(0xec)],_0x493e96[_0x484128(0x16f)]());return _0x484128(0xb9)+(_0x43d785?_0x4cd640['aPBMN']:'')+_0x484128(0x107)+(_0x43d785?_0x4cd640[_0x484128(0x1a5)]:'')+'\x22>'+String(_0x208703+0x1)[_0x484128(0x14a)](0x2,'0')+_0x484128(0x153)+MESES[_0x37c459[_0x484128(0xec)]]+'\x20'+_0x37c459[_0x484128(0x18f)]+(_0x43d785?_0x484128(0x19d):'')+_0x484128(0x1a9)+(_0x4cd640[_0x484128(0xe5)](_0x37c459[_0x484128(0x158)][_0x484128(0xe3)],0x0)?_0x484128(0xd7):_0x37c459['eventos'][_0x484128(0x118)](_0x44789a=>_0x484128(0x166)+(_0x43d785?_0x484128(0x96):'')+_0x484128(0xaf)+(_0x43d785?'#bbb':COLORES[_0x44789a[_0x484128(0x167)]][_0x484128(0x9c)])+_0x484128(0x1c6)+_0x44789a[_0x484128(0x110)]+'</strong>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>'+_0x44789a[_0x484128(0xff)]+_0x484128(0x176)+(_0x44789a[_0x484128(0x112)]?formatDate(_0x44789a[_0x484128(0x112)]):_0x484128(0x105))+_0x484128(0x1a3))['join'](''))+_0x484128(0x191);})[_0x3c0a6f(0x134)]('')+_0x3c0a6f(0xe4);}function switchTab(_0x15f319,_0x41bfd5){const _0x627e7=a0_0x38cfcd,_0x242ae8={'CJJBI':function(_0x4bb5fe,_0xc1700){return _0x4bb5fe===_0xc1700;},'GSPiU':_0x627e7(0x12e),'ZDYHO':function(_0x1725d6,_0x2489fe){return _0x1725d6===_0x2489fe;},'FWAvJ':_0x627e7(0xc6),'HxmEk':_0x627e7(0xc4)};document[_0x627e7(0x181)]('.tab')[_0x627e7(0x1c5)](_0x2d3d48=>_0x2d3d48[_0x627e7(0x16d)][_0x627e7(0xee)](_0x627e7(0x11c))),_0x41bfd5[_0x627e7(0x16d)]['add']('active'),document['getElementById']('vistaAnual')[_0x627e7(0x127)][_0x627e7(0xfa)]=_0x242ae8[_0x627e7(0x146)](_0x15f319,_0x242ae8[_0x627e7(0x8c)])?'':_0x627e7(0xc4),document[_0x627e7(0x19f)](_0x627e7(0x137))[_0x627e7(0x127)]['display']=_0x242ae8[_0x627e7(0x142)](_0x15f319,_0x627e7(0x95))?_0x242ae8['FWAvJ']:_0x242ae8[_0x627e7(0x183)];}window[a0_0x38cfcd(0x19e)]=function(){const _0x10b27d=a0_0x38cfcd,_0x181c81={'iEktJ':_0x10b27d(0x1bf),'DPofC':function(_0x331011,_0x2a9762){return _0x331011+_0x2a9762;},'iZCBM':_0x10b27d(0x190),'XdsOc':function(_0x10f363,_0x3473fb){return _0x10f363+_0x3473fb;},'Gxvvh':function(_0x37c753,_0x2d06c9){return _0x37c753+_0x2d06c9;},'CZpYg':function(_0x3fbe39,_0x1029ad){return _0x3fbe39+_0x1029ad;},'PMCIW':function(_0x4ae74b,_0x58c8cf){return _0x4ae74b%_0x58c8cf;},'aSenC':function(_0x4074f8,_0x5069c8){return _0x4074f8-_0x5069c8;},'prXNr':function(_0x4ee95f,_0x4d4efd){return _0x4ee95f*_0x4d4efd;},'qXsWx':function(_0x13118b,_0x5df415){return _0x13118b+_0x5df415;},'YtRNr':function(_0x2be01b,_0x38217d){return _0x2be01b/_0x38217d;},'TAhnx':_0x10b27d(0xf3),'Rijap':function(_0x8d3965,_0x6aac9b){return _0x8d3965===_0x6aac9b;},'jlKoq':_0x10b27d(0xa6),'tIvfi':function(_0x3f809c){return _0x3f809c();},'lmvKt':_0x10b27d(0x92),'wQuCs':function(_0x54f090,_0x52df59){return _0x54f090+_0x52df59;},'dziWq':function(_0x4c7b05,_0x2c42cc){return _0x4c7b05+_0x2c42cc;},'AOfCQ':_0x10b27d(0x10e),'pyCGW':function(_0x3c0987,_0x4ebb1b){return _0x3c0987+_0x4ebb1b;},'KSXwv':function(_0x25af49,_0x57307b){return _0x25af49+_0x57307b;},'ncWRa':_0x10b27d(0x160),'ciKtC':function(_0x3165,_0x4c2e71){return _0x3165-_0x4c2e71;},'icgKa':'Plan\x20Sanitario\x20Ganadero\x20·\x20','LXhNJ':'\x20·\x20','ratIJ':function(_0xc1470,_0x266f96){return _0xc1470+_0x266f96;},'kMHpF':_0x10b27d(0x1c4),'Zjvox':_0x10b27d(0xcf),'IopZO':_0x10b27d(0x17a)},_0x3880dd=_0x181c81['tIvfi'](getParams),_0x170693=calcularPlan(_0x3880dd),_0xc6df0c=agruparPorMes(_0x170693),_0xe290c8=new jsPDF({'orientation':_0x181c81[_0x10b27d(0x144)],'unit':'mm','format':'a4'}),_0x197c53=0xd2,_0x306997=0xf;let _0xa101b=0x0;function _0x2f4e7e(){const _0x39ddc1=_0x10b27d;_0xe290c8[_0x39ddc1(0x170)](),_0xa101b=_0x306997,_0xe290c8[_0x39ddc1(0x11b)](0x1a,0x7a,0x55),_0xe290c8['rect'](0x0,0x0,_0x197c53,0xa,'F'),_0xe290c8['setFontSize'](0x8),_0xe290c8[_0x39ddc1(0x1b2)](0xff,0xff,0xff),_0xe290c8[_0x39ddc1(0x9a)](_0x181c81[_0x39ddc1(0x1b3)]+_0x3880dd[_0x39ddc1(0xd4)]+_0x39ddc1(0x106)+_0x3880dd[_0x39ddc1(0xf2)],_0x306997,0x7),_0xa101b=0x12;}function _0x3cdd43(_0x4e861f){if(_0xa101b+_0x4e861f>0x113)_0x2f4e7e();}_0xe290c8['setFillColor'](0x1a,0x7a,0x55),_0xe290c8[_0x10b27d(0x13f)](0x0,0x0,_0x197c53,0x3c,'F');try{const _0x2c000e=document[_0x10b27d(0x1b7)](_0x10b27d(0xba));if(_0x2c000e&&_0x2c000e[_0x10b27d(0x18d)]){const _0x125e62=document[_0x10b27d(0xd6)](_0x10b27d(0xde));_0x125e62['width']=_0x2c000e[_0x10b27d(0x15c)],_0x125e62[_0x10b27d(0xc9)]=_0x2c000e[_0x10b27d(0x18e)];const _0x117114=_0x125e62[_0x10b27d(0x103)]('2d');_0x117114[_0x10b27d(0x180)](_0x2c000e,0x0,0x0);const _0x512599=_0x125e62[_0x10b27d(0x1c0)]('image/jpeg'),_0x4ab952=0x3c,_0x4f9bf6=_0x2c000e[_0x10b27d(0x18e)]/_0x2c000e[_0x10b27d(0x15c)]*_0x4ab952;_0xe290c8[_0x10b27d(0xc2)](_0x512599,_0x10b27d(0x17d),_0x197c53/0x2-_0x181c81[_0x10b27d(0x102)](_0x4ab952,0x2),0x46,_0x4ab952,_0x4f9bf6),_0xa101b=_0x181c81[_0x10b27d(0x197)](_0x181c81['DPofC'](0x46,_0x4f9bf6),0x8);}else _0xa101b=0x46;}catch(_0x3b926d){_0xa101b=0x46;}_0xe290c8[_0x10b27d(0x125)](0x14),_0xe290c8[_0x10b27d(0x1a4)](_0x181c81[_0x10b27d(0x1b5)],'bold'),_0xe290c8[_0x10b27d(0x1b2)](0xd,0x52,0x38),_0xe290c8['text']('Plan\x20Sanitario\x20Ganadero',_0x181c81[_0x10b27d(0x102)](_0x197c53,0x2),_0x181c81[_0x10b27d(0x1ac)](_0xa101b,0xa),{'align':_0x10b27d(0x10e)}),_0xe290c8[_0x10b27d(0x125)](0xc),_0xe290c8[_0x10b27d(0x1a4)](_0x10b27d(0xf3),_0x10b27d(0x190)),_0xe290c8['setTextColor'](0x5a,0x5a,0x5a),_0xe290c8['text'](_0x10b27d(0xb4),_0x197c53/0x2,_0xa101b+0x14,{'align':_0x181c81['AOfCQ']}),_0xe290c8['setFillColor'](0xe8,0xf5,0xef),_0xe290c8[_0x10b27d(0xe2)](_0x306997,_0xa101b+0x1c,_0x197c53-_0x306997*0x2,0x32,0x4,0x4,'F'),_0xe290c8[_0x10b27d(0x125)](0xa),_0xe290c8[_0x10b27d(0x1b2)](0x1a,0x7a,0x55),_0xe290c8[_0x10b27d(0x1a4)]('helvetica','bold'),_0xe290c8[_0x10b27d(0x9a)](_0x10b27d(0x15e),_0x306997+0x8,_0x181c81[_0x10b27d(0xa8)](_0xa101b,0x28)),_0xe290c8[_0x10b27d(0x1a4)](_0x10b27d(0xf3),'normal'),_0xe290c8['setTextColor'](0x1c,0x1c,0x1a),_0xe290c8[_0x10b27d(0x125)](0xd),_0xe290c8['text'](_0x3880dd[_0x10b27d(0xd4)],_0x306997+0x8,_0xa101b+0x32),_0xe290c8[_0x10b27d(0x125)](0xa),_0xe290c8[_0x10b27d(0x1b2)](0x5a,0x5a,0x5a),_0xe290c8[_0x10b27d(0x9a)](_0x3880dd[_0x10b27d(0xf2)]+(_0x3880dd[_0x10b27d(0xa2)]?_0x10b27d(0x138)+_0x3880dd['ubicacion']:'')+(_0x3880dd[_0x10b27d(0x156)]?_0x10b27d(0x138)+_0x3880dd[_0x10b27d(0x156)]:''),_0x306997+0x8,_0xa101b+0x3a),_0xe290c8['text'](_0x181c81[_0x10b27d(0x89)](_0x10b27d(0x184),_0x3880dd[_0x10b27d(0x93)]),_0x306997+0x8,_0x181c81[_0x10b27d(0xa0)](_0xa101b,0x42)),_0xa101b=_0xa101b+0x5a,_0xe290c8[_0x10b27d(0x125)](0x9),_0xe290c8['setFont'](_0x10b27d(0xf3),_0x10b27d(0x9e)),_0xe290c8['setTextColor'](0x1c,0x1c,0x1a),_0xe290c8[_0x10b27d(0x9a)](_0x10b27d(0xf8),_0x306997,_0xa101b),_0xa101b+=0x6;const _0x566a86=Object[_0x10b27d(0xda)](COLORES);_0x566a86[_0x10b27d(0x1c5)]((_0x38b279,_0x7006e2)=>{const _0x2bf063=_0x10b27d,_0x12c030=_0x181c81[_0x2bf063(0x12a)](_0x306997,_0x7006e2%0x2*0x5a);if(_0x7006e2%0x2===0x0&&_0x7006e2>0x0)_0xa101b+=0x7;const _0x16bd5d=hexToRgb(_0x38b279[_0x2bf063(0x9c)]);_0xe290c8['setFillColor'](_0x16bd5d['r'],_0x16bd5d['g'],_0x16bd5d['b']),_0xe290c8[_0x2bf063(0x15f)](_0x12c030+0x3,_0xa101b-1.5,0x3,'F'),_0xe290c8[_0x2bf063(0x1a4)](_0x2bf063(0xf3),_0x181c81['iZCBM']),_0xe290c8[_0x2bf063(0x1b2)](0x1c,0x1c,0x1a),_0xe290c8[_0x2bf063(0x9a)](_0x38b279['nombre'],_0x181c81[_0x2bf063(0xcc)](_0x12c030,0x8),_0xa101b);}),_0xa101b=0x10e,_0xe290c8['setFontSize'](0x8),_0xe290c8[_0x10b27d(0x1b2)](0x96,0x96,0x96),_0xe290c8['text'](_0x10b27d(0x18b)+new Date()['toLocaleDateString'](_0x10b27d(0x133)),_0x306997,_0xa101b),_0xe290c8[_0x10b27d(0x9a)]('Página\x201\x20de\x20'+(_0xc6df0c[_0x10b27d(0xe3)]+0x1),_0x197c53-_0x306997,_0xa101b,{'align':_0x10b27d(0xcf)}),_0x2f4e7e(),_0xe290c8[_0x10b27d(0x125)](0xe),_0xe290c8[_0x10b27d(0x1a4)](_0x10b27d(0xf3),_0x10b27d(0x9e)),_0xe290c8[_0x10b27d(0x1b2)](0xd,0x52,0x38),_0xe290c8[_0x10b27d(0x9a)](_0x181c81[_0x10b27d(0x90)],_0x306997,_0xa101b),_0xa101b+=0xa;const _0x2bf237=[0x23,_0x181c81['ciKtC'](_0x197c53,_0x306997*0x2)-0x23],_0x468d18=0x7;_0xe290c8['setFillColor'](0x1a,0x7a,0x55),_0xe290c8[_0x10b27d(0x13f)](_0x306997,_0xa101b,_0x197c53-_0x306997*0x2,0x8,'F'),_0xe290c8[_0x10b27d(0x125)](0x9),_0xe290c8[_0x10b27d(0x1a4)](_0x10b27d(0xf3),_0x10b27d(0x9e)),_0xe290c8[_0x10b27d(0x1b2)](0xff,0xff,0xff),_0xe290c8[_0x10b27d(0x9a)](_0x10b27d(0xae),_0x306997+0x3,_0x181c81['CZpYg'](_0xa101b,5.5)),_0xe290c8[_0x10b27d(0x9a)](_0x10b27d(0x163),_0x181c81[_0x10b27d(0x1ac)](_0x306997+_0x2bf237[0x0],0x3),_0xa101b+5.5),_0xa101b+=0x8,_0xc6df0c[_0x10b27d(0x1c5)]((_0x107148,_0x2ca924)=>{const _0x31b48b=_0x10b27d,_0x1134a4=_0x107148[_0x31b48b(0x158)]['length']===0x0?[_0x31b48b(0x1c2)]:_0x107148[_0x31b48b(0x158)][_0x31b48b(0x118)](_0xe8bd32=>'•\x20'+_0xe8bd32[_0x31b48b(0x110)]),_0x50b2a5=0x5,_0xb69266=Math['max'](_0x1134a4['length']*_0x50b2a5+0x4,0xa);_0x3cdd43(_0xb69266+0x2),_0x181c81[_0x31b48b(0xbd)](_0x2ca924,0x2)===0x0&&(_0xe290c8[_0x31b48b(0x11b)](0xf8,0xf8,0xf6),_0xe290c8[_0x31b48b(0x13f)](_0x306997,_0xa101b,_0x181c81['aSenC'](_0x197c53,_0x306997*0x2),_0xb69266,'F')),_0xe290c8[_0x31b48b(0x17b)](0xd8,0xd4,0xcc),_0xe290c8['rect'](_0x306997,_0xa101b,_0x197c53-_0x181c81[_0x31b48b(0x1ba)](_0x306997,0x2),_0xb69266),_0xe290c8[_0x31b48b(0x9f)](_0x181c81[_0x31b48b(0x171)](_0x306997,_0x2bf237[0x0]),_0xa101b,_0x306997+_0x2bf237[0x0],_0x181c81['qXsWx'](_0xa101b,_0xb69266)),_0xe290c8['setFontSize'](0x9),_0xe290c8[_0x31b48b(0x1a4)]('helvetica','bold'),_0xe290c8['setTextColor'](0xd,0x52,0x38),_0xe290c8['text'](MESES[_0x107148['mes']]['substring'](0x0,0x3)[_0x31b48b(0x19a)](),_0x181c81[_0x31b48b(0x12a)](_0x306997,0x3),_0xa101b+_0xb69266/0x2+1.5),_0xe290c8['setFontSize'](0x8),_0xe290c8[_0x31b48b(0x1a4)](_0x31b48b(0xf3),_0x31b48b(0x190)),_0xe290c8[_0x31b48b(0x1b2)](0x5a,0x5a,0x5a),_0xe290c8['text'](String(_0x107148[_0x31b48b(0x18f)]),_0x306997+0x3,_0x181c81[_0x31b48b(0xbf)](_0xa101b+_0x181c81[_0x31b48b(0x102)](_0xb69266,0x2),6.5)),_0xe290c8['setFontSize'](0x8),_0xe290c8[_0x31b48b(0x1a4)](_0x181c81['TAhnx'],_0x181c81[_0x31b48b(0x17f)]),_0x1134a4['forEach']((_0x5d30d8,_0x3aa332)=>{const _0x998a3e=_0x31b48b,_0xb63cb6=_0x107148['eventos'][_0x3aa332];if(_0xb63cb6){const _0x1114cd=hexToRgb(COLORES[_0xb63cb6[_0x998a3e(0x167)]][_0x998a3e(0x9c)]);_0xe290c8['setTextColor'](_0x1114cd['r'],_0x1114cd['g'],_0x1114cd['b']);}else _0xe290c8[_0x998a3e(0x1b2)](0xb4,0xb4,0xb4);const _0xe1862c=_0x5d30d8['length']>0x46?_0x181c81[_0x998a3e(0x171)](_0x5d30d8[_0x998a3e(0x16c)](0x0,0x44),'...'):_0x5d30d8;_0xe290c8[_0x998a3e(0x9a)](_0xe1862c,_0x306997+_0x2bf237[0x0]+0x3,_0x181c81[_0x998a3e(0xa8)](_0xa101b,0x2)+_0x50b2a5*(_0x3aa332+0.8));}),_0xa101b+=_0xb69266;}),_0xc6df0c[_0x10b27d(0x1c5)](_0x1ac86c=>{const _0x4b86eb=_0x10b27d,_0x2c93ae={'DgVzd':function(_0x144ad0,_0x25e660){return _0x144ad0(_0x25e660);},'IrrhK':function(_0x4e882f,_0x37e574){return _0x4e882f(_0x37e574);},'GCRMN':function(_0x110ff4,_0x43d1c9){return _0x110ff4+_0x43d1c9;},'iMLcx':function(_0x132b2a,_0xfc820d){return _0x132b2a(_0xfc820d);},'SKbIa':_0x181c81[_0x4b86eb(0x1b5)],'NQkfO':_0x4b86eb(0x9e),'ibTvO':function(_0x3ae0ec,_0xffc9aa){return _0x3ae0ec+_0xffc9aa;},'dNsYP':_0x4b86eb(0x122),'kOoqi':function(_0x487b64,_0x27ab09){return _0x487b64+_0x27ab09;}};_0x2f4e7e(),_0xe290c8[_0x4b86eb(0x11b)](0xe8,0xf5,0xef),_0xe290c8[_0x4b86eb(0x13f)](_0x306997,_0xa101b-0x4,_0x197c53-_0x306997*0x2,0xe,'F'),_0xe290c8[_0x4b86eb(0x125)](0xe),_0xe290c8['setFont']('helvetica',_0x4b86eb(0x9e)),_0xe290c8[_0x4b86eb(0x1b2)](0xd,0x52,0x38),_0xe290c8[_0x4b86eb(0x9a)](_0x181c81[_0x4b86eb(0xbf)](MESES[_0x1ac86c[_0x4b86eb(0xec)]],'\x20')+_0x1ac86c[_0x4b86eb(0x18f)],_0x306997+0x4,_0x181c81[_0x4b86eb(0x171)](_0xa101b,0x5)),_0xa101b+=0x10;if(_0x181c81[_0x4b86eb(0x136)](_0x1ac86c['eventos'][_0x4b86eb(0xe3)],0x0)){_0xe290c8[_0x4b86eb(0x125)](0xa),_0xe290c8[_0x4b86eb(0x1a4)]('helvetica',_0x4b86eb(0x1a7)),_0xe290c8[_0x4b86eb(0x1b2)](0xb4,0xb4,0xb4),_0xe290c8['text'](_0x181c81[_0x4b86eb(0xed)],_0x306997,_0xa101b);return;}_0x1ac86c['eventos']['forEach'](_0x1f4826=>{const _0x507678=_0x4b86eb,_0x71908c=_0x2c93ae['DgVzd'](hexToRgb,COLORES[_0x1f4826[_0x507678(0x167)]][_0x507678(0x9c)]),_0x148ea4=_0x2c93ae['IrrhK'](hexToRgb,COLORES[_0x1f4826[_0x507678(0x167)]]['claro']),_0x5dd9d3=_0xe290c8[_0x507678(0xb8)](_0x1f4826[_0x507678(0xff)],_0x197c53-_0x306997*0x2-0x14),_0x58086d=_0x2c93ae[_0x507678(0x94)](0x8+_0x5dd9d3[_0x507678(0xe3)]*4.5,0x8);_0x2c93ae[_0x507678(0x1b1)](_0x3cdd43,_0x58086d+0x4),_0xe290c8[_0x507678(0x11b)](_0x148ea4['r'],_0x148ea4['g'],_0x148ea4['b']),_0xe290c8[_0x507678(0xe2)](_0x306997,_0xa101b,_0x197c53-_0x306997*0x2,_0x58086d,0x3,0x3,'F'),_0xe290c8[_0x507678(0x11b)](_0x71908c['r'],_0x71908c['g'],_0x71908c['b']),_0xe290c8[_0x507678(0x13f)](_0x306997,_0xa101b,0x4,_0x58086d,'F'),_0xe290c8[_0x507678(0x125)](7.5),_0xe290c8['setFont'](_0x2c93ae[_0x507678(0xab)],_0x2c93ae[_0x507678(0x1aa)]),_0xe290c8[_0x507678(0x1b2)](_0x71908c['r'],_0x71908c['g'],_0x71908c['b']),_0xe290c8[_0x507678(0x9a)](COLORES[_0x1f4826[_0x507678(0x167)]][_0x507678(0xd4)][_0x507678(0x19a)](),_0x306997+0x8,_0x2c93ae[_0x507678(0x8e)](_0xa101b,0x6)),_0xe290c8[_0x507678(0x125)](0xa),_0xe290c8[_0x507678(0x1a4)](_0x507678(0xf3),_0x2c93ae['NQkfO']),_0xe290c8[_0x507678(0x1b2)](0x1c,0x1c,0x1a),_0xe290c8[_0x507678(0x9a)](_0x1f4826[_0x507678(0x110)],_0x306997+0x8,_0xa101b+0xc),_0xe290c8['setFontSize'](8.5),_0xe290c8[_0x507678(0x1a4)](_0x507678(0xf3),'normal'),_0xe290c8[_0x507678(0x1b2)](0x5a,0x5a,0x5a),_0xe290c8[_0x507678(0x9a)](_0x5dd9d3,_0x306997+0x8,_0xa101b+0x12),_0x1f4826[_0x507678(0x112)]&&(_0xe290c8[_0x507678(0x125)](0x8),_0xe290c8[_0x507678(0x1a4)](_0x507678(0xf3),'bold'),_0xe290c8['setTextColor'](_0x71908c['r'],_0x71908c['g'],_0x71908c['b']),_0xe290c8[_0x507678(0x9a)](_0x2c93ae[_0x507678(0xa9)]+formatDate(_0x1f4826[_0x507678(0x112)]),_0x306997+0x8,_0xa101b+_0x58086d-0x4)),_0xa101b+=_0x2c93ae['kOoqi'](_0x58086d,0x4);});});const _0x405509=_0xe290c8[_0x10b27d(0x148)]();for(let _0xad30c3=0x1;_0xad30c3<=_0x405509;_0xad30c3++){const _0x76468e='2|3|4|1|0'[_0x10b27d(0x178)]('|');let _0x230d85=0x0;while(!![]){switch(_0x76468e[_0x230d85++]){case'0':_0xad30c3>0x1&&_0xe290c8[_0x10b27d(0x9a)](_0x181c81['icgKa']+_0x3880dd[_0x10b27d(0xd4)]+_0x181c81['LXhNJ']+_0x3880dd[_0x10b27d(0xf2)],_0x306997,0x122);continue;case'1':_0xe290c8['text'](_0x181c81[_0x10b27d(0x1b4)](_0x10b27d(0x99),_0xad30c3)+_0x181c81[_0x10b27d(0x1af)]+_0x405509,_0x197c53-_0x306997,0x122,{'align':_0x181c81[_0x10b27d(0x120)]});continue;case'2':_0xe290c8[_0x10b27d(0x88)](_0xad30c3);continue;case'3':_0xe290c8[_0x10b27d(0x125)](7.5);continue;case'4':_0xe290c8[_0x10b27d(0x1b2)](0xb4,0xb4,0xb4);continue;}break;}}_0xe290c8[_0x10b27d(0xdb)](_0x10b27d(0xa5)+_0x3880dd[_0x10b27d(0xd4)][_0x10b27d(0xca)](/ /g,'_')+_0x181c81[_0x10b27d(0xe1)]);};function hexToRgb(_0x3707f3){const _0x37f306=a0_0x38cfcd,_0xea9cb1={'jWidm':function(_0x359c9a,_0x1656ca,_0x3fecc6){return _0x359c9a(_0x1656ca,_0x3fecc6);}},_0x3afb77=parseInt(_0x3707f3[_0x37f306(0xd2)](0x1,0x3),0x10),_0xaf5e89=parseInt(_0x3707f3['slice'](0x3,0x5),0x10),_0x29d00d=_0xea9cb1['jWidm'](parseInt,_0x3707f3[_0x37f306(0xd2)](0x5,0x7),0x10);return{'r':_0x3afb77,'g':_0xaf5e89,'b':_0x29d00d};}function a0_0x3d5d(){const _0x2f7ab1=['umoHz2LUysa','Dgv4Da','vwvHA3K','Agv4','rKHMyLm','yM9Sza','BgLUzq','s1nyD3y','vMfJDw5Hy2NdS24Gy29UDhjHienSB3n0CMLKAxvTigHHzw1VBhL0Awn1BsaOAgvTB2DSB2jPBNvYAweGyMfJAwXHCIKGCgfYysb0B2rHCYbSyxmGy2f0zwDVCSoTyxmGzguGyw5PBwfSzxmUifbHDmoZz2vUBYbKzsbHBhrHig1VCNrHBgLKywqUifrYzxmGyxbSAwnHy2LVBMvZigfUDwfSzxm6igzLyNjLCM8SigP1BMLVihKGB2n0DwjYzs4','DwjPy2fJAw9U','ienVBw8GzwWGzxn0ywjSzwnPBwLLBNrVihjLywXPEMeGy2fZDhjHy2NdS24Gy29UigDVBweSigXHihzHy3vUysbKzwjLigLUy2X1AxiGy29Izxj0DxjHihbHCMeGvmoPDgfUB3mU','zMLUx3nLCNzPy2LVCW','ugXHBL9tyw5PDgfYAw9F','u2LUigfJDgL2AwrHzgvZihbYB2DYyw1HzgfZihbHCMeGzxn0zsbTzxmU','v2HrzNm','q1PWwwC','ze5Zwva','ywrKrxzLBNrmAxn0zw5LCG','u0TIswe','DMfJDw5Hy2LVBG','u2vNDw5KysbKB3nPCYbKzsb2ywn1BMeGCMvWCM9KDwn0AxzHihbHCMeGDMfXDwLSBg9UyxmUieXHCYb2ywnHCYb2ywn1BMfKyxmGzwWGyCoXBYbHBNrLCMLVCIbYzwnPyMvUihvUysddUM5Py2eGzg9ZAxmGzguGCMv2ywn1BMfJACoZBIbHBNvHBcaZmcbKW61HCYbHBNrLCYbKzwWGC2vYDMLJAw8UienHDgvNB3ldRwfZig1LBM9YzxmGzguGmIbHW7fVCYbKzwjLBIbLC3rHCIbKzxnWyxjHC2L0ywrHCY4','tuvt','iJ4kicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMv2zw50BY1JyxqTzg90iIbZDhLSzt0IyMfJA2DYB3vUzdO','y29SB3i6i2fHytS','rMLLyNjLiefMDg9ZysdIGjqGmSk6ihbLCSoTB2rVlcbMAw4GDMfJDw5Hy2NdS24','tw9UAxrVCMvVigrLigfIB3j0B3m','rNzPAfy','q2fSzw5KyxjPBYbqzxjZB25HBgL6ywrVigrLiefJDgL2AwrHzgvZ','q29UigXHihbYAw1HDMvYysbSBgvNysbLBcbYAwvZz28UieXHCYbLC3bVCMfZigrLignHCMj1BMnVihnLigvUy3vLBNrYyw4Gzw4GzwWGC3vLBg8UifzHy3vUyxiGyw50zxmGzgvSihzLCMfUBYbJDwfUzg8GBg9ZigfUAw1HBgvZignVBwvUignVBNrYysbLBcbZDwvSBY4','ChvZAa','EvvnzKe','C3bSAxruzxH0vg9tAxPL','cIaGicaGicaGpgrPDIbJBgfZCZ0IBwvZlwrLDgfSBgu','Aw1Nw3nYyZ0IBg9NBY5QCgvNiL0','iJ4kicaGicaGicaGicaGicaGicaG','Bg9Hza','ue1dsvC','pc9WpGOGicaGica8l2rPDJ4kicaGicaGpgj1DhrVBIbJBgfZCZ0IyNrUlxbKzIiGB25JBgLJAZ0Iz2vUzxjHCLberIGPiJ4kicaGicaGica8C3zNihzPzxDcB3G9iJaGmcaYncaYnciGzMLSBd0IBM9UzsiGC3rYB2TLpsjJDxjYzw50q29SB3iIihn0CM9Rzs13Awr0Ad0ImIiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiJ4kicaGicaGicaGidXWyxrOigq9iK0YmsaXnxy0ytiGmIaWidaGms0YidjinweYidiGmcaWideTmI0YDI00iI8+cIaGicaGicaGica8Cg9SEwXPBMuGCg9PBNrZpsi3ideWideYide1ide3ideWiI8+cIaGicaGicaGica8BgLUzsb4mt0ImtiIihKXpsiXnsiGEdi9iJeYiIb5mJ0ImYiVpGOGicaGicaGidWVC3zNpGOGicaGicaGierLC2nHCMDHCIbqreykicaGicaGpc9IDxr0B24+cIaGica8l2rPDJ4kcIaGica8zgL2ignSyxnZpsj0ywjZiJ4kicaGicaGpgj1DhrVBIbJBgfZCZ0IDgfIigfJDgL2zsiGB25JBgLJAZ0IC3DPDgnOvgfIkcDHBNvHBcCSihrOAxmPiJ5wAxn0ysbHBNvHBdWVyNv0Dg9UpGOGicaGica8yNv0Dg9UignSyxnZpsj0ywiIig9Uy2XPy2S9iNn3AxrJAfrHyIGNBwvUC3vHBcCSihrOAxmPiJ5nzxmGysbTzxm8l2j1DhrVBJ4kicaGidWVzgL2pGOkicaGidXKAxyGy2XHC3m9iMXLEwvUzgeIpGOGicaGica','CvHZv3G','vMfJDw5Hy2LVBMvZ','vMfJDw5Hy2NdS24Gy29UDhjHigvUzMvYBwvKywrLCYbYzxnWAxjHDg9YAwfZihKGB2n1BgfYzxmG4OcuidhcQIbKB3nPCYaODgvYBMvYB3mVyxmP','ywrKsw1Hz2u','u2vNDw5KysbKB3nPCYbLBIbHyNjPBcbJB250CMeGzw5MzxjTzwrHzgvZihjLC3bPCMf0B3jPyxmGEsbVy3vSyxjLCYbWyxjHignVBxbSzxrHCIbPBM11BML6ywnPW7nUihbYzxzPBYbHBcbKzxn0zxrLlG','BM9Uzq','ywz0B3nHmMLUAwnPBW','yMXVy2S','C2fNDwf5Cgu','CM9QC0S','AgvPz2H0','CMvWBgfJzq','cIaGicaGicaGicaGicaGicaGia','wgrZt2m','DNPbsxu','i2zKzJbLoa','CMLNAhq','zvPbv3m','AgfLBw9SExrPy3vT','C2XPy2u','C2LUrMvJAge','BM9TyNjL','u2vNDw5KysbKB3nPzMLJywnPW7nUigfUDwfSignVBNrYysbZywD1yxLWW6KUifrYyxrHBwLLBNrVihjLy29Tzw5KywrVoIbuCMLJBgfIzw5KyxPVBcaOBwf0ysbLC3rHzgLVCYbTW6fZigLUBwfKDxjVCYKUifrHBwjPW6LUoIbsywzVEgfUAwrHlcbdBg9Zyw50zwWSie5PDhjVEgLUAwWGEsbdBg9YC3vSW7nUlG','y3jLyxrLrwXLBwvUDa','pgrPDIbJBgfZCZ0IBM8TzxzLBNrVCYi+u2LUigfJDgL2AwrHzgvZihbYB2DYyw1HzgfZigvZDguGBwvZlJWVzgL2pG','rgLJAwvTyNjL','tM92AwvTyNjL','DMfSDwvZ','C2f2zq','mZuXmdq0u2Ppr3bX','imk3ia','y2fUDMfZ','zw5KBW','sNvSAw8','sw9WwK8','CM91BMrLzfjLy3q','BgvUz3rO','cIaGica8l2rPDJ4kica','C0HxBMC','uMv2ywn1BMfJACoZBIbKzsb0zxjUzxjHCYbJB250CMeGqNj1y2vSB3nPCYWGmYbTzxnLCYbWB3n0zxjPB3jLCYbHigXHihbYAw1LCMeGDMfJDw5Hy2NdS24UifjLy3vLCMrLigfSihzLDgvYAw5HCMLVigfJDhvHBNrLihf1zsbZDwjHigvSignLCNrPzMLJywrVigfSifnjtKfwruXflG','yMfJA2DYB3vUzdOJzJbMmgyWo2nVBg9YoInHywe7','mtiWqNHAzu53','q29UDhjVBcbNyxjYyxbHDgfZiokaLcaXWQOGz2vUzxjHy2NdS24','Bw9Zy2e','DeTrsw4','BwvZ','AMXlB3e','CMvTB3zL','ig1LCY1WyxnHzg8','n2PHsLfpsq','CKjtD3O','zxn0ywjSzwnPBwLLBNrV','AgvSDMv0AwnH','BhHIDK8','mtKZntbOrKnjz00','ywz0B3nHmMzPBG','vMfJDw5HihjLChjVzhvJDgL2ysb2yxf1AwXSB25HCYdIGjqGmSkQigrVC2LZicSGuMv2ywn1BMfJACoZBIb2ywnHCW','q0furuDpuSonqvm','BhbREem','zgLZCgXHEq','mZuYotm4zvrZDezi','yNvrtha','u2KGzgv0zwn0W7mGywjVCNrVCYbLCYbIDwvUig1VBwvUDg8GzguGBgXHBwfYigeGC3uGDMv0zxjPBMfYAw8GzguGy29UzMLHBNPHihbHCMeGBgXLz2fYigeGDw4GzgLHz27dS3n0AwnVigrLigfIB3j0BYb5ihbYzxzLBMLYigDYyw5KzxmGChjVyMXLBwfZigeGzNv0DxjVlG','C2v0rgf0zq','zgvZy3jPCgnPB24','vhjLBwf0B2rLihj1BwLUywWUifrYyxrHCIbHBMLTywXLCYbHzMvJDgfKB3mUiefUDguGBgeGzhvKysbYzwfSAwnLigfUW6fSAxnPCYbJB3bYB2ZdS2DPy28UifrYyxrHBwLLBNrVihjLy29Tzw5KywrVoIbpEgLJBg96yw5PzguGmJaLlG','uMv2ywn1BMfJACoZBIbJB250CMeGvhjPC3rLEMeGyM92Aw5HicH0zxjUzxjVCY9HCYK','wxrstNi','z2v0q29UDgv4Da','DhjPC3rLEMe','rMvJAgeGC2vNW7PUie1hqva','iokaLca','iJ4kicaGicaGicaGidXKAxyGy2XHC3m9iM1LCY1KzxrHBgXLlwHLywrLCIi+cIaGicaGicaGicaGidXKAxyGy2XHC3m9iM1LCY1UDw0Iihn0EwXLpsi','vhjHDgfTAwvUDg8Gy29UDhjHifbHCMfTCgHPC3rVBxvT','y2fZDhjHy2LVBG','rw5LCM8','phnWyw4Gy2XHC3m9iMv2zw50BY1MzwnOysi+','rgvZy2fYDguGzguGAgvTyNjHCW','ywz0B3nHmwLUAwnPBW','y2vUDgvY','A1DhuMq','DgL0DwXV','qLP4Bhy','zMvJAge','i2mWmZKYyG','svrxwva','yxbWBhK','cIaGica8l2rPDJ4kcIaGica8zgL2igLKpsj2Axn0yufUDwfSiIbJBgfZCZ0Iyw51ywWTz3jPzci+cIaGicaGia','vMfJDw5Hy2NdS24Gy2XVC3rYAwrPywWG4OcuidhcQIbKB3nPCYaODgvYBMvYB3mVyxmP','BwfW','cIaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaG','iZzIm2zHma','C2v0rMLSBenVBg9Y','ywn0AxzL','uMv2ywn1BMfJACoZBIbKzsb0zxjUzxjVCY9HCYbJB250CMeGy2XVC3rYAwrPB3mUievZigz1BMrHBwvUDgfSihf1zsbJyxrLz29YW61HCYbTzw5VCMvZigrLidiGyCoXB3mGzxn0W6LUigrLC3bHCMfZAxrHzgfZlG','mtK0odHTvvHPuei','qwDVC3rV','wMP2B3G','Dxv0Bfm','rMvJAgeGzxn0Aw1Hzge6ia','z2v0','cIaGica8l2rPDJ4kcIaGica8zgL2igLKpsj2Axn0yu1LBNn1ywWIignSyxnZpsjTzw5ZDwfSlxDYyxaIpGOGicaGica','C2v0rM9UDfnPEMu','uMv2ywn1BMfJACoZBIbJB250CMeGvhjPC3rLEMeGzguGDgvYBMvYB3mVyxmSidyWigtdRwfZigrLC3b1W6LZigrLigXHihbYAw1LCMeGzg9ZAxmGCgfYysbJB21WBgv0yxiGBgeGAw5TDw5PEMfJACoZBI4','C3r5Bgu','rxmGyNvLBIbTB21LBNrVigrLigv2ywX1yxiGBg9ZihnLCNzPy2LVCYb5ig5VihrLBMvYihnVCNbYzxnHCYbUzwDHDgL2yxmGy3vHBMrVihnLigHHy2uGBgeGzwnVz3jHzSoTysbKzsbKAwfNBSoZC3rPy28GzguGz2vZDgfJACoZBI4Gu2uGy2XHC2LMAwnHig1LzgLHBNrLigrPywDUW7nZDgLJBYbKzsbHy3rPDMLKywqGB3BdOxjPy2e6igHLBwjYyxmGy2LJBgfUzg8SigvUigfUzxn0CM8GC3vWzxjMAwnPywWGEsbWCM9MDw5KBYWGCgfYysb0B21HCIbVCg9YDhvUyw1LBNrLig1LzgLKyxmGzguGBwfUzwPVig8GBM8U','uhjVzhvJDg9Y','rfbVzKm','idXZCgfUihn0EwXLpsjMB250lxnPEMu6oxb4o2nVBg9YoInHywe7zM9UDc13zwLNAhq6ndaWoYi+khjLywXPEMfKBYK8l3nWyw4+','shf1rhO','DMv0zxjPBMfYAw8','yw51ywW','qM92Aw5VCYbTzw5VCMvZigrLidiGyCoXB3mGC29Uig11EsbZDxnJzxb0AwjSzxmUifjLywXPEMfYigfUW6fSAxnPCYbJB3bYB2ZdS2DPy28GBYbKB3nPzMLJyxiGC2vNW7PUihjLC3vSDgfKBY4','rg9ZAwzPy2fJACoZBIbJB250CMeGu2fNDwf5CmoPicHgyxnJAw9SysbOzxbHDgLJysK','uMv2ywn1BMfJACoZBIbJBg9ZDhjPzgLHBcaODgvYBMvYB3mVyxmP','DMfSDwu','zxmTvvK','AM9PBG','ANPJCMC','uMLQyxa','DMLZDgfnzw5ZDwfS','icdcTYaG','BMLkzMC','rxmGyNvLBIbTB21LBNrVihbHCMeGCxvLigXHCYbOzw1ICMfZignVBIbWCM9IBgvTyxmGzguGDwjYzsWGywjVCNrVCYWGBwfSysbKzw50AwnPW7nUlcbWCM9SyxbZB3mGzguGW7P0zxjVlcbLDgmUlcbZzwfUignSyxnPzMLJywrHCYbJB21VigrLC2nHCNrLihbHCMeGBg9ZihbYW7n4Aw1VCYbZzxj2AwnPB3mGCMvWCM9KDwn0AxzVCY4','vMfJDw5HihjLChjVzhvJDgL2ysb2yxf1AwXSB25HCYdIGjqGmCkQigrVC2LZ','vMfJDw5Hy2NdS24Gy29UDhjHienSB3n0CMLKAxvTigHHzw1VBhL0Awn1BsdIGjqGDg9KyxmGBgfZignHDgvNB3ldRwfZ','q29UDhjVBcbNyxjYyxbHDgfZiokaLcaYWQOGz2vUzxjHy2NdS24','i2yWzwfMyq','CMvJDa','EgfRu2O','oty5mdr4AxnXC1q','wKrzse8','qLfNCNC','Bg12s3q','rMLLyNjLiefMDg9ZysdIGjqGmSk6ihbLCSoTB2rVicHMzwnOyxmGCgvUzgLLBNrLCYK','q0PkqKK','sw5NCMvZyxiGBgfZigzLy2HHCYbKzwWGmSk6ihbLCSoTB2rVigrLihzHy3vUywnPW7nUigvUigvSihbHBMvSihn1CgvYAw9YlG','z2v0tNvTyMvYt2zqywDLCW','mtK5odmZEffmuM1K','CgfKu3rHCNq','vMfJDw5Hy2NdS24Gy29UDhjHienHCMj1BMnVicJdGw50CMf4kq','C29YDa','DKrXDwC','DvbOq00','Aw5Py2LVx3nLCNzPy2LVCW','rMvICMvYBW','Bg9JyxrPB24','zMLUx3bHCNrVCW','pc9KAxy+cIaGicaGicaGicaGidXKAxyGy2XHC3m9iM1LCY1KzxrHBgXLlw5VBwjYzsi+','cIaGicaGicaGpgrPDIbJBgfZCZ0IBwvZlwnHCMq','AKr5zgK','CgfYywPL','y2fYyNvUy28','zxzLBNrVCW','pgrPDIbJBgfZCZ0IBwvZlxzHy2LViJ5tAw4Gywn0AxzPzgfKzxm8l2rPDJ4','C2vHCMnO','iJ48l2rPDJ4kicaGicaGicaGidXZCgfUpG','BMf0DxjHBfDPzhrO','Dg9tDhjPBMC','ufjprfvdve9s','y2LYy2XL','uMvZDw1LBIbbBNvHBcbKzsbby3rPDMLKywrLCW','sNvUAw8','cIaGicaGicaGpgrPDIbJBgfZCZ0IBgv5zw5Kys1PDgvTiJ4kicaGicaGicaGidXKAxyGy2XHC3m9iMXLEwvUzgeTzg90iIbZDhLSzt0IyMfJA2DYB3vUzdO','qunusvzjrefervmGufjpr1jbtufeqvm','vhjHyMfQB3mGDMv0zxjPBMfYAw9Z','CgfYyw1WAgLZDg9TDw0','cIaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IzxzLBNrVlxjVDYiGC3r5Bgu9iG','y2f0zwDVCMLH','tgeGBw9Zy2eGzgvSign1zxjUBYbWCM92B2nHihddQxjKAwrHCYbKzsaXmcbHidmWigTNigrLignHCM5LihbVCIbHBMLTywWGCg9YighdSw8UiefWBgLJyxiGBgfZig1LzgLKyxmGChjLDMvUDgL2yxmGy29YCMvZCg9UzgLLBNrLCY4','yNLouM0','ChnMAMO','EeXiC3i','C3vIC3rYAw5N','y2XHC3nmAxn0','ywz0B3nHmwzPBG','z2v0tw9UDgG','ywrKugfNzq','r3H2DMG','s0Tdwfm','zMLSDgvY','twfUzwPV','BM9Zzq','pc9ZCgfUpGOGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjMzwnOys10ywCIpG','vMfJDw5HCIb0zxjUzxjHCYbLBNrYzsaZihKGocbTzxnLCYbKzsbLzgfKignVBNrYysbcCNvJzwXVC2LZicHcCNvJzwXSysbHyM9YDhvZks4GuMvJDwvYzguGywWGDMv0zxjPBMfYAw8Gywn0DwfUDguGCxvLihn1yMeGzwWGy2vYDgLMAwnHzg8GzguGDMfJDw5Hy2NdS24GywWGu0LoqvzfteuU','C3bSAxq','tw9UAxrVCMvVigrLigvUDg9Yzq','lNbKzG','C2v0rhjHD0nVBg9Y','uMvHBgL6yxiGyw7dOwXPC2LZignVChjVBmoZz2LJBYbWyxjHigrLDgvYBwLUyxiGChjLC2vUy2LHigrLifbHCMfTCgHPC3rVBxvTihKVBYbtywD1yxLWW6KGkezHC2nPB2XHigHLCgf0AwnHksbLBIbLBcbYB2rLBY4Gq29UC3vSDguGysbZDsb2zxrLCMLUyxjPBY4','sLbfrW','vMfJDw5Hy2NdS24Gy29UDhjHifrYAxn0zxPHicHcywjLC2LVC2LZl0fUyxbSyxnTB3nPCYKGzguGDgvYBMvYB3mVyxmGBwf5B3jLCYbHigXVCYaZig1LC2vZlIbbCgXPy2fYigvUihPVBMeGy29UihbYzxnLBMnPysbKzsbNyxjYyxbHDgfZihbVCNrHzg9YyxmU','AvPdqK0','zhjHD0LTywDL','CxvLCNLtzwXLy3rVCKfSBa','rvzWEKi','shHTrwS','q2vSoIa','pc9KAxy+cIaGicaGicaGica','twf5BW','ifrHBwjPW6LUigvZigj1zw4GBw9Tzw50BYbKzsb2ywn1BMfYigeGBgfZihrLCM5LCMfZignVBNrYysbcCNvJzwXVC2LZlG','uMvHBgL6yxiGzxzHBhvHy2NdS24Gy29TCgXLDgeGzguGyxb0Axr1zcbYzxbYB2r1y3rPDMeGzguGBg9ZihrVCM9ZoIbJB25KAwnPW7nUignVCNbVCMfSlcbHCgfYyxrVihjLChjVzhvJDg9YlcbJyxbHy2LKywqGzguGBw9UDgeGEsbJywXPzgfKihnLBwLUywWUieHHy2vYBg8Gy29UihrPzw1WBYbZDwzPy2LLBNrLihbHCMeGCMvLBxbSyxPHCIb0B3jVCYbZAsbLCYbUzwnLC2fYAw8U','rgLHz27dS3n0AwnVignVChjVBmoZz2LJBYdIGjqGugfYyw1WAgLZDg9TDw0GlYbtywD1yxLWW6K','z2v0rNvSBfLLyxi','r2vUzxjHzg86ia','sw5Py2LVigrLBcaYWROGCgvYW61Vzg8GzguGDMfJDw5Hy2NdS24GB2jSAwDHDg9YAweGy29UDhjHiezPzwjYzsbbzNrVC2eGke1hqvaPlIbuB2rVCYbSB3mGyM92Aw5VCY4','y29TCgXLDgu','BMf0DxjHBeHLAwDODa','yw5PBW','BM9YBwfS','cIaGicaGicaGpc9KAxy+','iZfHnwzHoa','rLv2Cem','ANnWzgy','y1PyDuK','BwfPBKnVBNrLBNq','D1f1q3m','D2fxq20','z2fYCMfWyxrHCW','Dg9vChbLCKnHC2u','rxfeteu','iJ4kicaGicaGicaGidXKAxyGy2XHC3m9iM1LCY1UB21ICMuIpG','idXZCgfUihn0EwXLpsjMB250lxnPEMu6mtfWEdTJB2XVCJOJywfHo2zVBNqTD2vPz2H0oJqWmdSIpUkaLcb5ysbYzwfSAxPHzg88l3nWyw4+','z2vUzxjHCLberG','z2v0rwXLBwvUDej5swq','i2u4zJvLzG','rMLLyNjLiefMDg9ZysdIGjqGmSk6ihbLCSoTB2rVlcbPBMLJAw8GDMfJDw5Hy2NdS24','rNbiswK','pc9KAxy+cIaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaG','C2v0rM9UDa','D2XjwwG','vhjHDgfYignVBNrYysbWCMLTzxjHigDLBMvYywnPW7nUigrLigDHCNjHCgf0yxmGy29UihvUysbMyw1PBgLHigrLigDHCNjHCgf0AwnPzgfZigrPzMvYzw50zsbHigXHihvZywrHigvUigDLBMvYywnPW7nUidiGEsaZlIbdB25ZDwX0zsbHihn1ihzLDgvYAw5HCMLVihbHCMeGC2vSzwnJAw9UyxiGzwWGChjVzhvJDg8GywrLy3vHzg8GEsbYzxnWzxrHCIbSB3mGDgLLBxbVCYbKzsbJyxjLBMnPys4','AxrHBgLJ','ovvUqKfsDq','pc9KAxy+cIaGicaGicaGica8l2rPDJ4kicaGicaGicaGia','tLfRzK8','uMv2ywn1BMfJACoZBIbHBNvHBcbJBg9ZDhjPzgLHBcdIGjqGDg9KyxmGBgfZignHDgvNB3ldRwfZ','zhPPv3e','mJyWndu1wLbezxjd','DNryCfG','A01iCey','qwjYAwW','Au1my3G','C2v0vgv4DenVBg9Y','AuvRDeO','CMf0suO','vefOBNG','y29UC3rYDwn0B3i','CxvLCNLtzwXLy3rVCG','kcGOlISPkYKRksSK','cIaGica8zgL2ignSyxnZpsjWCM9KDwn0B3iTy2fYzci+cIaGicaGidXKAxyGy2XHC3m9iNbYB2r1y3rVCI1PBMzViJ4kicaGicaGica8Adi+','ChjytNi','B21qt08','uMv2ywn1BMfJACoZBIbJB250CMeGqNj1y2vSB3nPCYaODgvYBMvYyxmP','vMfJDw5Hy2NdS24Gy29UDhjHieXLChrVC3bPCM9ZAxmGkYbeAwfNBSoZC3rPy28GzwnVz3ldOwzPy28','yNj1y2vSB3nPCW','ugXHBIbtyw5PDgfYAw8Gr2fUywrLCM8G4Ocuia','Dg9eyxrHvvjm','vMfJDw5Hy2NdS24Gy29UDhjHifrYAxn0zxPHigjVDMLUysaODgvYBMvYB3mVyxmP','u2LUigfJDgL2AwrHzgvZ','q29UDhjVBcbWyxldOxnPDg9ZigDHC3rYB2LUDgvZDgLUywXLCYaOBwvUB3jLCYaYighdSw9Zkq','igrLia','zM9YrwfJAa','iJ48l2rPDJ4kicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMv2zw50BY1KzxqIpGOGicaGicaGicaGicaGicaGica8C3rYB25NpG','uhnpEMS','vhjHDgfYignVBNrYysbZzwD1BMrHigDLBMvYywnPW7nUigrLigDHCNjHCgf0yxmGy29UihvUysbMyw1PBgLHigrLigDHCNjHCgf0AwnPzgfZigrPzMvYzw50zsbHigXHCYb1C2fKyxmGCgfYysbNzw5LCMfJACoZBIaXihKGmY4Gq29UC3vSDguGysbZDsb2zxrLCMLUyxjPBY4','pc9OmJ4kicaGicaGica8Cd4','q2PVyNe','vMfJDw5Hy2NdS24Gy29UDhjHiejYDwnLBg9ZAxmGkhrLCM5LCMfZkq','twfYEM8','C2v0ugfNzq','ChLdr1C','zwn0BW','rxn0ywjSzwnPBwLLBNrV','r1nqAvu','uMv2ywn1BMfJACoZBIbHBNvHBcbJB24Gy2XVC3rYAwrPywXLCYbWyxjHihrVzgfZigXHCYbJyxrLz29YW61HCYbKzsbHBMLTywXLCYbKzwWGCM9Kzw8Uifb1zwrLihjLywXPEMfYC2uGzw4Gzxn0zsbTB21LBNrVig8GANvUDg8Gy29UigXHihjLDMfJDw5Hy2NdS24GzguGDgvYBMvYB3mVyxmU','AwjuDK8','BMvVC3bVCMe','BMnxuMe','BNvTzxjPyW','Cg9YDhjHAxq','y2vSDwXHCG','r0nstu4','BwvUC3vHBa','B3bHy2L0EtOWlJC1oW','cIaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IzxzLBNrVlxbPBgWIpGOGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IzxzLBNrVlwrVDciGC3r5Bgu9iMjHy2TNCM91BMq6','rxzHBhvHy2NdS24Gyw5HDmoZBwLJysb5igz1BMnPB25HBcbKzsbuB3jVCW'];a0_0x3d5d=function(){return _0x2f7ab1;};return a0_0x3d5d();}function actualizarAftosa(){const _0x27d4a9=a0_0x38cfcd,_0x4d2e25={'eZAWs':_0x27d4a9(0x10d),'psfjj':_0x27d4a9(0x16e),'vDqug':'aftosa2fin','VtHkG':function(_0x1de011,_0x59cef2,_0x42a511,_0xec6b4d){return _0x1de011(_0x59cef2,_0x42a511,_0xec6b4d);}},_0x305bb5=getParams();_0x305bb5['aftosa1inicio']=document[_0x27d4a9(0x19f)](_0x4d2e25[_0x27d4a9(0xd0)])[_0x27d4a9(0x132)],_0x305bb5['aftosa1fin']=document[_0x27d4a9(0x19f)](_0x4d2e25[_0x27d4a9(0x16a)])['value'],_0x305bb5[_0x27d4a9(0xc5)]=document[_0x27d4a9(0x19f)]('aftosa2inicio')[_0x27d4a9(0x132)],_0x305bb5['aftosa2fin']=document['getElementById'](_0x4d2e25[_0x27d4a9(0x14d)])[_0x27d4a9(0x132)];const _0x1fbcf1=calcularPlan(_0x305bb5),_0x38d2f9=agruparPorMes(_0x1fbcf1);_0x4d2e25['VtHkG'](render,_0x305bb5,_0x1fbcf1,_0x38d2f9);}window[a0_0x38cfcd(0xaa)](a0_0x38cfcd(0xbc),()=>{const _0x37fb6e=a0_0x38cfcd,_0xa42fda={'vzAIu':function(_0x59de7b){return _0x59de7b();},'Cjobq':function(_0x30d282,_0x38e915){return _0x30d282(_0x38e915);}},_0x33061e=_0xa42fda[_0x37fb6e(0xcd)](getParams),_0x50e2c1=_0xa42fda[_0x37fb6e(0x1ca)](calcularPlan,_0x33061e),_0xbf464f=agruparPorMes(_0x50e2c1);render(_0x33061e,_0x50e2c1,_0xbf464f);});</script>
+<style>
+:root {
+  --verde: #1a7a55;
+  --verde-claro: #e8f5ef;
+  --verde-oscuro: #0d5238;
+  --tierra: #8b6914;
+  --tierra-claro: #fdf3e0;
+  --rojo: #c0392b;
+  --rojo-claro: #fdf0ee;
+  --azul: #1a5fa8;
+  --azul-claro: #e8f0fb;
+  --violeta: #6b3fa0;
+  --violeta-claro: #f0eafa;
+  --naranja: #c05c1a;
+  --naranja-claro: #fdf0e8;
+  --gris: #5a5a5a;
+  --gris-claro: #f5f4f1;
+  --borde: #d8d4cc;
+  --texto: #1c1c1a;
+  --blanco: #fefefe;
+  --sombra: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #f0ede6;
+  min-height: 100vh;
+  color: var(--texto);
+  padding: 2rem 1rem 4rem;
+}
+.container { max-width: 860px; margin: 0 auto; }
+
+/* HEADER */
+.header { text-align: center; margin-bottom: 2rem; }
+.logo-icon {
+  width: 60px; height: 60px; background: var(--verde);
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 0.75rem;
+  box-shadow: 0 4px 20px rgba(26,122,85,0.3);
+}
+.logo-nombre { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--verde-oscuro); }
+.logo-sub { font-size: 13px; color: var(--gris); margin-top: 2px; }
+
+/* PRODUCTOR INFO */
+.productor-card {
+  background: var(--blanco); border-radius: 14px;
+  border: 0.5px solid var(--borde); padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem; box-shadow: var(--sombra);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.productor-info h2 { font-family: 'Lora', serif; font-size: 18px; font-weight: 500; color: var(--texto); }
+.productor-info p { font-size: 13px; color: var(--gris); margin-top: 2px; }
+.btn-pdf {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--verde); color: white; border: none;
+  border-radius: 10px; padding: 10px 20px; font-size: 14px;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  cursor: pointer; transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.btn-pdf:hover { background: var(--verde-oscuro); transform: translateY(-1px); }
+.btn-pdf svg { width: 16px; height: 16px; }
+
+/* TABS */
+.tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+.tab {
+  padding: 8px 20px; border-radius: 8px; border: 1px solid var(--borde);
+  background: var(--blanco); font-size: 13.5px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; color: var(--gris);
+  transition: all 0.18s;
+}
+.tab.active { background: var(--verde); color: white; border-color: var(--verde); font-weight: 500; }
+
+/* LEYENDA */
+.leyenda {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 1.25rem;
+}
+.leyenda-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--gris);
+}
+.leyenda-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* VISTA ANUAL */
+.anual-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.mes-card {
+  background: var(--blanco); border-radius: 12px;
+  border: 0.5px solid var(--borde); padding: 1rem;
+  box-shadow: var(--sombra);
+}
+.mes-nombre {
+  font-family: 'Lora', serif; font-size: 14px; font-weight: 600;
+  color: var(--verde-oscuro); margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem; border-bottom: 0.5px solid var(--borde);
+}
+.mes-vacio { font-size: 12px; color: #bbb; font-style: italic; }
+.evento-pill {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin-bottom: 5px;
+}
+.evento-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.evento-texto { font-size: 11.5px; color: var(--texto); line-height: 1.4; }
+.evento-fecha { font-size: 10px; color: var(--gris); display: block; }
+
+/* VISTA MENSUAL */
+.mensual-wrap { display: none; }
+.mes-detalle {
+  background: var(--blanco); border-radius: 14px;
+  border: 0.5px solid var(--borde); padding: 1.5rem;
+  margin-bottom: 1rem; box-shadow: var(--sombra);
+}
+.mes-detalle-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 1rem; padding-bottom: 0.75rem;
+  border-bottom: 0.5px solid var(--borde);
+}
+.mes-num {
+  width: 36px; height: 36px; background: var(--verde-claro);
+  border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-weight: 600; font-size: 14px;
+  color: var(--verde-oscuro); flex-shrink: 0;
+}
+.mes-detalle-nombre { font-family: 'Lora', serif; font-size: 17px; font-weight: 500; }
+.evento-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 0.5px solid var(--gris-claro);
+}
+.evento-row:last-child { border-bottom: none; padding-bottom: 0; }
+.evento-cat-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 3px;
+}
+.evento-det { flex: 1; }
+.evento-det strong { font-size: 13.5px; font-weight: 500; display: block; color: var(--texto); }
+.evento-det span { font-size: 12px; color: var(--gris); line-height: 1.5; display: block; margin-top: 2px; }
+.evento-det .fecha-tag, .evento-det div.fecha-tag {
+  display: block;
+  background: var(--gris-claro);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--gris);
+  margin-top: 6px;
+  width: fit-content;
+  clear: both;
+}
+
+/* CATEGORIAS */
+.cat-vacunacion { background: #1a5fa8; }
+.cat-endo { background: #6b3fa0; }
+.cat-ecto { background: #c05c1a; }
+.cat-manejo { background: #1a7a55; }
+.cat-veterinario { background: #c0392b; }
+
+/* NO EVENTOS */
+.no-eventos { font-size: 13px; color: #bbb; font-style: italic; padding: 0.5rem 0; }
+
+.mes-pasado { opacity: 0.8; border-left: 3px solid #d8d4cc; }
+
+/* LOADING */
+.loading {
+  text-align: center; padding: 4rem 2rem;
+  background: var(--blanco); border-radius: 14px;
+  border: 0.5px solid var(--borde);
+}
+.loading p { color: var(--gris); font-size: 14px; margin-top: 1rem; }
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .anual-grid { grid-template-columns: 1fr 1fr; }
+  .productor-card { flex-direction: column; }
+  .tabs { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <img src="logo.jpeg" alt="Más Fértil" style="width:140px;height:auto;display:block;margin:0 auto 0.5rem;mix-blend-mode:multiply;" onerror="this.style.display='none';" />
+    <div class="logo-nombre">Plan Sanitario Ganadero</div>
+    <div class="logo-sub">Calendario de actividades personalizado</div>
+  </div>
+
+  <!-- PANEL AFTOSA -->
+  <div id="aftosaPanel" style="background:white;border-radius:14px;border:0.5px solid #d8d4cc;padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:0.5px solid #d8d4cc;">
+      <div style="width:36px;height:36px;border-radius:10px;background:#e8f0fb;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a5fa8" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div style="font-family:'Lora',serif;font-size:15px;font-weight:500;">Fechas Fiebre Aftosa</div>
+        <div style="font-size:12px;color:#5a5a5a;">Ingresá las fechas de cada período de vacunación (MGAP)</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#1a5fa8;">1º Período</div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de inicio</label>
+        <input type="date" id="aftosa1inicio" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de fin</label>
+        <input type="date" id="aftosa1fin" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+      <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#1a5fa8;margin-top:6px;">2º Período</div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de inicio</label>
+        <input type="date" id="aftosa2inicio" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:#5a5a5a;margin-bottom:3px;">Fecha de fin</label>
+        <input type="date" id="aftosa2fin" style="width:100%;height:36px;border:1px solid #d8d4cc;border-radius:8px;padding:0 10px;font-size:12px;" onchange="actualizarAftosa()" />
+      </div>
+    </div>
+  </div>
+
+  <div id="mainContent">
+    <div class="loading">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1a7a55" stroke-width="2">
+        <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32">
+          <animate attributeName="stroke-dashoffset" values="32;0" dur="1s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      <p>Calculando tu plan sanitario...</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+// ======================================================
+// COLORES POR CATEGORÍA
+// ======================================================
+const COLORES = {
+  vacunacion:   { hex: '#1a5fa8', claro: '#e8f0fb', nombre: 'Vacunaciones' },
+  endo:         { hex: '#6b3fa0', claro: '#f0eafa', nombre: 'Endoparásitos' },
+  ecto:         { hex: '#c05c1a', claro: '#fdf0e8', nombre: 'Ectoparásitos' },
+  manejo:       { hex: '#1a7a55', claro: '#e8f5ef', nombre: 'Manejo' },
+  veterinario:  { hex: '#c0392b', claro: '#fdf0ee', nombre: 'Trabajos veterinarios' }
+};
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// ======================================================
+// LEER PARÁMETROS DE LA URL
+// ======================================================
+function getParams() {
+  const p = new URLSearchParams(window.location.search);
+  return {
+    nombre:           p.get('nombre') || 'Productor',
+    establecimiento:  p.get('establecimiento') || 'Establecimiento',
+    ubicacion:        p.get('ubicacion') || '',
+    paraje:           p.get('paraje') || '',
+    celular:          p.get('celular') || '',
+    fin_partos:       p.get('fin_partos') || '',
+    inicio_servicios: p.get('inicio_servicios') || '',
+    fin_servicios:    p.get('fin_servicios') || '',
+    brucelosis:       p.get('brucelosis') || 'no',
+    neospora:         p.get('neospora') || 'no',
+    garrapatas:       p.get('garrapatas') || 'no',
+    tristeza:         p.get('tristeza') || 'no',
+    carbunco:         p.get('carbunco') || 'no',
+    paramphistomum:   p.get('paramphistomum') || 'no',
+    saguaype:         p.get('saguaype') || 'no',
+    mosca:            p.get('mosca') || 'no',
+    haemolyticum:     p.get('haemolyticum') || 'no',
+    castracion:       p.get('castracion') || 'no',
+    aftosa1inicio:    p.get('aftosa1inicio') || '',
+    aftosa1fin:       p.get('aftosa1fin') || '',
+    aftosa2inicio:    p.get('aftosa2inicio') || '',
+    aftosa2fin:       p.get('aftosa2fin') || ''
+  };
+}
+
+// ======================================================
+// UTILIDADES DE FECHA
+// ======================================================
+function parseDate(str) {
+  if (!str) return null;
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function formatDate(date) {
+  if (!date) return '';
+  return date.toLocaleDateString('es-UY', { day: 'numeric', month: 'short' });
+}
+
+function mesAnio(date) {
+  if (!date) return null;
+  return { mes: date.getMonth(), anio: date.getFullYear() };
+}
+
+// Obtener fecha de un mes en el año actual o siguiente si ya pasó más de 6 meses
+function proximoMes(mesIdx) {
+  const hoy = new Date();
+  let anio = hoy.getFullYear();
+  // Si el mes ya pasó hace más de 1 mes, usar el año siguiente
+  if (mesIdx < hoy.getMonth() - 1) anio++;
+  return new Date(anio, mesIdx, 1);
+}
+
+// ======================================================
+// MOTOR DE CÁLCULO DEL PLAN SANITARIO
+// ======================================================
+function calcularPlan(p) {
+  const eventos = []; // { fecha, titulo, descripcion, categoria, mesajes? }
+
+  const finPartos       = parseDate(p.fin_partos);
+  const finServicios    = parseDate(p.fin_servicios);
+  const inicioServicios = parseDate(p.inicio_servicios);
+
+  // -------- 1. ENFERMEDADES CLOSTRIDIALES --------
+  if (finPartos) {
+    const vac1 = addDays(finPartos, 90);
+    const vac2 = addDays(finPartos, 120);
+
+    const tetanos = p.castracion === 'si' ? ' Como el establecimiento realiza castración con goma, la vacuna debe incluir cobertura para Tétanos.' : '';
+    const brucDesc = p.brucelosis === 'si' ? ' También es buen momento de vacunar a las terneras contra Brucelosis.' : '';
+
+    eventos.push({
+      fecha: vac1,
+      titulo: 'Vacunación clostridial — 1ª dosis (terneros/as)',
+      descripcion: 'Vacunar terneros/as contra enfermedades clostridiales. Revacunar a los 20-30 días para buena inmunidad previo al destete/castración. Animales vacunados el año pasado solo necesitan una dosis.' + tetanos + brucDesc,
+      categoria: 'vacunacion'
+    });
+
+    // Revacunación anual de todas las categorías — puede hacerse junto con 1ª dosis terneros
+    eventos.push({
+      fecha: vac1,
+      titulo: 'Revacunación anual clostridial — todas las categorías',
+      descripcion: 'Revacunación anual con clostridiales para todas las categorías de animales del rodeo. Puede realizarse en este momento o junto con la revacunación de terneros/as.',
+      categoria: 'vacunacion'
+    });
+
+    eventos.push({
+      fecha: vac2,
+      titulo: 'Revacunación clostridial (terneros/as)',
+      descripcion: 'Revacunación de terneros/as contra clostridios. Es fundamental que categorías menores de 2 años estén desparasitadas.' + tetanos,
+      categoria: 'vacunacion'
+    });
+
+    // Brucelosis — junio, revacunación 3 meses después (septiembre)
+    if (p.brucelosis === 'si') {
+      eventos.push({
+        fecha: proximoMes(5), // Junio
+        titulo: 'Vacunación contra Brucelosis (terneras)',
+        descripcion: 'Vacunar terneras entre 3 y 8 meses de edad contra Brucelosis (Brucella abortus). Recuerde al veterinario actuante que suba el certificado de vacunación al SINAVELE.',
+        categoria: 'vacunacion'
+      });
+      eventos.push({
+        fecha: proximoMes(8), // Septiembre — 3 meses después
+        titulo: 'Revacunación contra Brucelosis (terneras)',
+        descripcion: 'Revacunación de terneras contra Brucelosis, 3 meses posteriores a la primera vacunación. Recuerde al veterinario actuante que suba el certificado al SINAVELE.',
+        categoria: 'vacunacion'
+      });
+    }
+
+    // -------- 1b. VACUNA RESPIRATORIA Y OCULAR — marzo y abril --------
+    eventos.push({ fecha: proximoMes(2), titulo: 'Vacunación contra enfermedades respiratorias y oculares — 1ª dosis (terneros/as)', descripcion: 'Vacunar terneros/as contra enfermedades respiratorias (IBR, DVB, PI3, BRSV) y queratoconjuntivitis infecciosa bovina. Primera dosis en marzo. Puede vacunar junto a otras vacunas si lo realiza en el mismo día, preferentemente del otro lado de la tabla del cuello.', categoria: 'vacunacion' });
+    eventos.push({ fecha: proximoMes(3), titulo: 'Revacunación contra enfermedades respiratorias y oculares — 2ª dosis (terneros/as)', descripcion: 'Segunda dosis en abril contra enfermedades respiratorias y oculares para completar inmunización previo al destete.', categoria: 'vacunacion' });
+
+  }
+
+  // -------- 2. LEPTOSPIROSIS Y ECOGRAFÍA --------
+  if (finServicios) {
+    const fecha = addDays(finServicios, 45);
+    eventos.push({
+      fecha,
+      titulo: 'Vacunación contra Leptospirosis + Diagnóstico ecográfico',
+      descripcion: 'Realizar diagnóstico por ecografía de vientres en servicio y vacunación de hembras preñadas para evitar abortos.',
+      categoria: 'veterinario'
+    });
+  }
+
+  // -------- 3. VACUNA REPRODUCTIVA PRE-SERVICIOS Y EVALUACIÓN DE TOROS --------
+  if (inicioServicios) {
+    // Evaluación anatómica y funcional de toros: 80 días antes
+    eventos.push({
+      fecha: addDays(inicioServicios, -80),
+      titulo: 'Evaluación anatómica y funcional de Toros',
+      descripcion: 'Realizar evaluación completa de aptitud reproductiva de los toros: condición corporal, aparato reproductor, capacidad de monta y calidad seminal. Hacerlo con tiempo suficiente para reemplazar toros si es necesario.',
+      categoria: 'veterinario'
+    });
+    // Vacuna reproductiva vaquillonas: 1ª dosis, 60 días antes
+    eventos.push({
+      fecha: addDays(inicioServicios, -60),
+      titulo: 'Vacuna reproductiva vaquillonas — 1ª dosis',
+      descripcion: 'Primera dosis de vacuna reproductiva para vaquillonas que ingresan al servicio. Se requieren 2 dosis para lograr inmunidad adecuada y evitar pérdidas embrionarias y abortos.',
+      categoria: 'vacunacion'
+    });
+    // Vacuna reproductiva vaquillonas 2ª dosis + vacas + descarte hembras: 30 días antes
+    eventos.push({
+      fecha: addDays(inicioServicios, -30),
+      titulo: 'Vacuna reproductiva vaquillonas — 2ª dosis + Revacunación vacas',
+      descripcion: 'Segunda dosis de vacuna reproductiva para vaquillonas. Las vacas vacunadas el año anterior reciben una única dosis de revacunación anual 30 días antes del servicio. Categorías menores de 2 años deben estar desparasitadas.',
+      categoria: 'vacunacion'
+    });
+    // Descarte de hembras — mismo momento que revacunación reproductiva
+    eventos.push({
+      fecha: addDays(inicioServicios, -30),
+      titulo: 'Descarte de hembras',
+      descripcion: 'Es buen momento para que las hembras con problemas de ubre, abortos, mala dentición, prolapsos de útero, etc., sean clasificadas como descarte para los próximos servicios reproductivos.',
+      categoria: 'manejo'
+    });
+    // Monitoreo de entore — primeros días de enero
+    eventos.push({
+      fecha: proximoMes(0), // Enero
+      titulo: 'Monitoreo de entore',
+      descripcion: 'Es buen momento de evaluar los servicios y no tener sorpresas negativas cuando se hace la ecografía de diagnóstico de gestación. Se clasifica mediante diagnóstico de actividad ovárica: hembras ciclando, en anestro superficial y profundo, para tomar oportunamente medidas de manejo o no.',
+      categoria: 'veterinario'
+    });
+  }
+
+  // -------- 4. CARBUNCO --------
+  if (p.carbunco === 'si') {
+    const fecha = proximoMes(8); // Septiembre
+    eventos.push({
+      fecha,
+      titulo: 'Vacunación contra Carbunco (Ántrax)',
+      descripcion: 'Con la primavera llega el riesgo. Las esporas de carbunco se encuentran en el suelo. Vacunar antes del verano cuando los animales comen contra el suelo.',
+      categoria: 'vacunacion'
+    });
+  }
+
+  // -------- 5. MOSCA DE CUERNOS --------
+  if (p.mosca === 'si') {
+    const fecha = proximoMes(11); // Diciembre
+    eventos.push({
+      fecha,
+      titulo: 'Control de Mosca de cuernos',
+      descripcion: 'La mosca del cuerno provoca pérdidas de 10 a 30 kg de carne por animal por año. Aplicar las medidas preventivas correspondientes.',
+      categoria: 'ecto'
+    });
+  }
+
+  // -------- 6. SAGUAYPÉ --------
+  if (p.saguaype === 'si') {
+    eventos.push({
+      fecha: proximoMes(4), // Mayo
+      titulo: 'Dosificación contra Saguaypé (Fasciola hepatica)',
+      descripcion: 'Dosificar al ganado contra saguaypé / distomatosis hepática. Tratamiento recomendado: Triclabendazol (mata estadios más inmaduros). También: Rafoxanida, Closantel, Nitroxinil y Clorsulón.',
+      categoria: 'endo'
+    });
+    eventos.push({
+      fecha: proximoMes(10), // Noviembre
+      titulo: 'Dosificación contra Saguaypé (Fasciola hepatica)',
+      descripcion: 'Segunda dosificación anual contra saguaypé. Tratamiento recomendado: Triclabendazol (mata estadios más inmaduros). También: Rafoxanida, Closantel, Nitroxinil y Clorsulón.',
+      categoria: 'endo'
+    });
+  }
+
+  // -------- 7. PARAMPHISTOMUM --------
+  if (p.paramphistomum === 'si') {
+    eventos.push({
+      fecha: proximoMes(4), // Mayo
+      titulo: 'Tratamiento contra Paramphistomum',
+      descripcion: 'Trematode ruminal. Tratar animales afectados. Ante la duda realice análisis coprológico. Tratamiento recomendado: Oxiclozanide 20%.',
+      categoria: 'endo'
+    });
+    eventos.push({
+      fecha: proximoMes(10), // Noviembre
+      titulo: 'Tratamiento contra Paramphistomum',
+      descripcion: 'Trematode ruminal. Tratar animales afectados. Ante la duda realice análisis coprológico. Tratamiento recomendado: Oxiclozanide 20%.',
+      categoria: 'endo'
+    });
+  }
+
+  // -------- 8. GARRAPATAS --------
+  if (p.garrapatas === 'si') {
+    // Primera generación: agosto, septiembre, octubre
+    [7, 8, 9].forEach(m => {
+      eventos.push({
+        fecha: proximoMes(m),
+        titulo: 'Control garrapatas — 1ª generación',
+        descripcion: 'Tratar contra primera generación de garrapatas con una familia de garrapaticidas diferente a la usada en generación 2 y 3. Consulte a su veterinario para seleccionar el producto adecuado y respetar los tiempos de carencia.',
+        categoria: 'ecto'
+      });
+    });
+    // Segunda generación: noviembre, diciembre, enero
+    [10, 11, 0].forEach(m => {
+      eventos.push({
+        fecha: proximoMes(m),
+        titulo: 'Control garrapatas — 2ª generación',
+        descripcion: 'Tratar contra segunda generación de garrapatas con una familia de garrapaticidas diferente a las usadas para generación 1 y 3. Consulte a su veterinario.',
+        categoria: 'ecto'
+      });
+    });
+    // Tercera generación: febrero, marzo, abril, mayo
+    [1, 2, 3, 4].forEach(m => {
+      eventos.push({
+        fecha: proximoMes(m),
+        titulo: 'Control garrapatas — 3ª generación',
+        descripcion: 'Tratar contra tercera generación de garrapatas con una familia de garrapaticida que no usó para generación 1 y 2. Consulte a su veterinario.',
+        categoria: 'ecto'
+      });
+    });
+  }
+
+  // -------- 9. TRISTEZA BOVINA --------
+  if (p.tristeza === 'si' && finPartos) {
+    const vac1Tristeza = addDays(finPartos, 90);
+    const vac2Tristeza = addDays(vac1Tristeza, 60);
+    eventos.push({
+      fecha: vac1Tristeza,
+      titulo: 'Vacunación contra Tristeza bovina (terneros/as)',
+      descripcion: 'Vacunación contra Tristeza (Babesiosis/Anaplasmosis) de terneros/as mayores a los 3 meses. Aplicar en zona con presencia de garrapatas portadoras.',
+      categoria: 'vacunacion'
+    });
+    eventos.push({
+      fecha: vac2Tristeza,
+      titulo: 'Revacunación contra Tristeza bovina (terneros/as)',
+      descripcion: 'Revacunación contra Tristeza de terneros/as, 60 días después de la primera dosis para completar la inmunización.',
+      categoria: 'vacunacion'
+    });
+  }
+
+  // -------- ABORTO Y PÉRDIDAS EMBRIONARIAS --------
+  if (p.neospora === 'si') {
+    [1, 2, 3, 4, 5, 6, 7, 8].forEach(m => { // Feb a Sep
+      eventos.push({
+        fecha: proximoMes(m),
+        titulo: 'Monitoreo de abortos',
+        descripcion: 'Si detectó abortos es buen momento de llamar a su veterinario de confianza para llegar a un diagnóstico de aborto y prevenir grandes problemas a futuro.',
+        categoria: 'veterinario'
+      });
+    });
+  }
+
+  // -------- DIAGNÓSTICO COPROLÓGICO (No sé en Paramphistomum o Saguaypé) --------
+  if (p.paramphistomum === 'nose' || p.saguaype === 'nose') {
+    [4, 8].forEach(m => { // Mayo, Septiembre
+      eventos.push({
+        fecha: proximoMes(m),
+        titulo: 'Diagnóstico coprológico — Paramphistomum / Saguaypé',
+        descripcion: 'Realizar análisis coprológico para determinar presencia de Paramphistomum y/o Saguaypé (Fasciola hepatica) en el rodeo. Consulte a su veterinario.',
+        categoria: 'veterinario'
+      });
+    });
+  }
+
+  // -------- 10. CLOSTRIDIUM HAEMOLYTICUM --------
+  if (p.haemolyticum === 'si') {
+    [1, 5, 9].forEach(m => { // Febrero, Junio, Octubre
+      eventos.push({
+        fecha: proximoMes(m),
+        titulo: 'Vacunación contra Clostridium haemolyticum — todas las categorías',
+        descripcion: 'Vacunación contra Clostridium haemolyticum (hemoglobinuria bacilar) para todas las categorías de animales. Patógeno de alta mortalidad. Tres aplicaciones anuales: febrero, junio y octubre.',
+        categoria: 'vacunacion'
+      });
+    });
+  }
+
+  // -------- 11. PARÁSITOS GASTROINTESTINALES (<2 años) --------
+  const mesesParasitos = [0, 2, 4, 6, 8, 10]; // Ene, Mar, May, Jul, Sep, Nov
+  mesesParasitos.forEach(m => {
+    eventos.push({
+      fecha: proximoMes(m),
+      titulo: 'Control parásitos gastrointestinales (menores 2 años)',
+      descripcion: 'Bovinos menores de 2 años son muy susceptibles. Realizar análisis coprológico o dosificar según resultado.',
+      categoria: 'endo'
+    });
+  });
+
+  // -------- 12. FIEBRE AFTOSA --------
+  if (p.aftosa1inicio) {
+    eventos.push({ fecha: parseDate(p.aftosa1inicio), titulo: 'Fiebre Aftosa — 1º período, inicio vacunación', descripcion: 'Inicio del 1º período de vacunación obligatoria contra Fiebre Aftosa (MGAP). Todos los bovinos.', categoria: 'vacunacion' });
+  }
+  if (p.aftosa1fin) {
+    eventos.push({ fecha: parseDate(p.aftosa1fin), titulo: 'Fiebre Aftosa — 1º período, fin vacunación', descripcion: 'Fin del 1º período de vacunación contra Fiebre Aftosa. Verificar que todos los animales hayan sido vacunados.', categoria: 'vacunacion' });
+  }
+  if (!p.aftosa1inicio && !p.aftosa1fin) {
+    eventos.push({ fecha: null, titulo: 'Fiebre Aftosa — 1º período (fechas pendientes)', descripcion: 'Ingresar las fechas del 1º período de vacunación en el panel superior.', categoria: 'vacunacion', sinFecha: true });
+  }
+  if (p.aftosa2inicio) {
+    eventos.push({ fecha: parseDate(p.aftosa2inicio), titulo: 'Fiebre Aftosa — 2º período, inicio vacunación', descripcion: 'Inicio del 2º período de vacunación obligatoria contra Fiebre Aftosa (MGAP). Todos los bovinos.', categoria: 'vacunacion' });
+  }
+  if (p.aftosa2fin) {
+    eventos.push({ fecha: parseDate(p.aftosa2fin), titulo: 'Fiebre Aftosa — 2º período, fin vacunación', descripcion: 'Fin del 2º período de vacunación contra Fiebre Aftosa. Verificar que todos los animales hayan sido vacunados.', categoria: 'vacunacion' });
+  }
+  if (!p.aftosa2inicio && !p.aftosa2fin) {
+    eventos.push({ fecha: null, titulo: 'Fiebre Aftosa — 2º período (fechas pendientes)', descripcion: 'Ingresar las fechas del 2º período de vacunación en el panel superior.', categoria: 'vacunacion', sinFecha: true });
+  }
+
+  return eventos.filter(e => e.fecha || e.sinFecha);
+}
+
+// ======================================================
+// AGRUPAR EVENTOS POR MES
+// ======================================================
+function agruparPorMes(eventos) {
+  const hoy = new Date();
+  const mapa = {};
+
+  // Agregar todos los eventos al mapa sin restricción de fechas
+  eventos.forEach(ev => {
+    if (ev.sinFecha) {
+      const key = `${hoy.getFullYear()}-${String(hoy.getMonth()).padStart(2,'0')}`;
+      if (!mapa[key]) mapa[key] = { mes: hoy.getMonth(), anio: hoy.getFullYear(), eventos: [] };
+      mapa[key].eventos.push(ev);
+      return;
+    }
+    const key = `${ev.fecha.getFullYear()}-${String(ev.fecha.getMonth()).padStart(2,'0')}`;
+    if (!mapa[key]) mapa[key] = { mes: ev.fecha.getMonth(), anio: ev.fecha.getFullYear(), eventos: [] };
+    mapa[key].eventos.push(ev);
+  });
+
+  // Ordenar cronológicamente
+  return Object.values(mapa).sort((a, b) => {
+    if (a.anio !== b.anio) return a.anio - b.anio;
+    return a.mes - b.mes;
+  });
+}
+
+// ======================================================
+// RENDER HTML
+// ======================================================
+function render(p, eventos, porMes) {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="productor-card">
+      <div class="productor-info">
+        <h2>${p.nombre}</h2>
+        <p>${p.establecimiento}${p.ubicacion ? ' · ' + p.ubicacion : ''}</p>
+      </div>
+      <button class="btn-pdf" onclick="generarPDF()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Descargar PDF
+      </button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('anual', this)">Vista anual</button>
+      <button class="tab" onclick="switchTab('mensual', this)">Mes a mes</button>
+    </div>
+
+    <div class="leyenda">
+      ${Object.entries(COLORES).map(([k,v]) => `
+        <div class="leyenda-item">
+          <div class="leyenda-dot" style="background:${v.hex}"></div>
+          <span>${v.nombre}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div id="vistaAnual" class="anual-grid">
+      ${porMes.map(m => {
+        const hoy = new Date();
+        const esPasado = (m.anio < hoy.getFullYear()) || (m.anio === hoy.getFullYear() && m.mes < hoy.getMonth());
+        return `
+        <div class="mes-card${esPasado ? ' mes-pasado' : ''}">
+          <div class="mes-nombre">${MESES[m.mes]} ${m.anio}${esPasado ? ' <span style="font-size:9px;color:#aaa;font-weight:400;">(realizado)</span>' : ''}</div>
+          ${m.eventos.length === 0
+            ? '<div class="mes-vacio">Sin actividades</div>'
+            : m.eventos.map(ev => `
+              <div class="evento-pill">
+                <div class="evento-dot" style="background:${esPasado ? '#bbb' : COLORES[ev.categoria].hex}"></div>
+                <div class="evento-texto" style="${esPasado ? 'color:#aaa;' : ''}">
+                  ${ev.titulo}
+                  ${ev.fecha ? `<span class="evento-fecha">${formatDate(ev.fecha)}</span>` : ''}
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div id="vistaMensual" class="mensual-wrap">
+      ${porMes.map((m, idx) => {
+        const hoy = new Date();
+        const esPasado = (m.anio < hoy.getFullYear()) || (m.anio === hoy.getFullYear() && m.mes < hoy.getMonth());
+        return `
+        <div class="mes-detalle${esPasado ? ' mes-pasado' : ''}">
+          <div class="mes-detalle-header">
+            <div class="mes-num" style="${esPasado ? 'background:#f0f0f0;color:#aaa;' : ''}">${String(idx + 1).padStart(2,'0')}</div>
+            <div class="mes-detalle-nombre">${MESES[m.mes]} ${m.anio}${esPasado ? ' <span style="font-size:11px;color:#aaa;font-weight:400;">— ya realizado</span>' : ''}</div>
+          </div>
+          ${m.eventos.length === 0
+            ? '<div class="no-eventos">Sin actividades programadas este mes.</div>'
+            : m.eventos.map(ev => `
+              <div class="evento-row" style="${esPasado ? 'opacity:0.75;' : ''}">
+                <div class="evento-cat-dot" style="background:${esPasado ? '#bbb' : COLORES[ev.categoria].hex}"></div>
+                <div class="evento-det">
+                  <strong>${ev.titulo}</strong>
+                  <span>${ev.descripcion}</span>
+                  <div class="fecha-tag">${ev.fecha ? formatDate(ev.fecha) : 'Fecha según MGAP'}</div>
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function switchTab(vista, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('vistaAnual').style.display = vista === 'anual' ? '' : 'none';
+  document.getElementById('vistaMensual').style.display = vista === 'mensual' ? 'block' : 'none';
+}
+
+// ======================================================
+// GENERAR PDF
+// ======================================================
+window.generarPDF = function() {
+  const p = getParams();
+  const eventos = calcularPlan(p);
+  const porMes = agruparPorMes(eventos);
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, mg = 15;
+  let y = 0;
+
+  function nuevaPagina() {
+    doc.addPage();
+    y = mg;
+    // Header pequeño en cada página
+    doc.setFillColor(26, 122, 85);
+    doc.rect(0, 0, W, 10, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Plan Sanitario Ganadero — ' + p.nombre + ' — ' + p.establecimiento, mg, 7);
+    y = 18;
+  }
+
+  function checkPage(needed) {
+    if (y + needed > 275) nuevaPagina();
+  }
+
+  // ---- PORTADA ----
+  doc.setFillColor(26, 122, 85);
+  doc.rect(0, 0, W, 60, 'F');
+
+  // Logo real desde imagen en la página
+  try {
+    const logoImg = document.querySelector('img[src="logo.jpeg"]');
+    if (logoImg && logoImg.complete) {
+      const canvas = document.createElement('canvas');
+      canvas.width = logoImg.naturalWidth;
+      canvas.height = logoImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(logoImg, 0, 0);
+      const logoData = canvas.toDataURL('image/jpeg');
+      const logoW = 60;
+      const logoH = (logoImg.naturalHeight / logoImg.naturalWidth) * logoW;
+      doc.addImage(logoData, 'JPEG', W/2 - logoW/2, 70, logoW, logoH);
+      y = 70 + logoH + 8;
+    } else {
+      y = 70;
+    }
+  } catch(e) {
+    y = 70;
+  }
+
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(13, 82, 56);
+  doc.text('Plan Sanitario Ganadero', W/2, y + 10, { align: 'center' });
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(90, 90, 90);
+  doc.text('Calendario Personalizado de Actividades', W/2, y + 20, { align: 'center' });
+
+  // Info del productor
+  doc.setFillColor(232, 245, 239);
+  doc.roundedRect(mg, y + 28, W - mg*2, 50, 4, 4, 'F');
+  doc.setFontSize(10);
+  doc.setTextColor(26, 122, 85);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PRODUCTOR', mg + 8, y + 40);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(28, 28, 26);
+  doc.setFontSize(13);
+  doc.text(p.nombre, mg + 8, y + 50);
+  doc.setFontSize(10);
+  doc.setTextColor(90, 90, 90);
+  doc.text(p.establecimiento + (p.ubicacion ? '  ·  ' + p.ubicacion : '') + (p.paraje ? '  ·  ' + p.paraje : ''), mg + 8, y + 58);
+  doc.text('Cel: ' + p.celular, mg + 8, y + 66);
+
+  // Leyenda portada
+  y = y + 90;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(28, 28, 26);
+  doc.text('CATEGORÍAS', mg, y);
+  y += 6;
+  const cats = Object.values(COLORES);
+  cats.forEach((c, i) => {
+    const x = mg + (i % 2) * 90;
+    if (i % 2 === 0 && i > 0) y += 7;
+    const rgb = hexToRgb(c.hex);
+    doc.setFillColor(rgb.r, rgb.g, rgb.b);
+    doc.circle(x + 3, y - 1.5, 3, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(28, 28, 26);
+    doc.text(c.nombre, x + 8, y);
+  });
+
+  // Fecha generación
+  y = 270;
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Generado: ' + new Date().toLocaleDateString('es-UY'), mg, y);
+  doc.text('Página 1 de ' + (porMes.length + 1), W - mg, y, { align: 'right' });
+
+  // ---- PÁGINAS DE CONTENIDO ----
+  nuevaPagina();
+
+  // Título vista anual
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(13, 82, 56);
+  doc.text('Resumen Anual de Actividades', mg, y);
+  y += 10;
+
+  // Tabla resumen: mes | actividades
+  const colW = [35, W - mg*2 - 35];
+  const rowH = 7;
+
+  // Cabecera tabla
+  doc.setFillColor(26, 122, 85);
+  doc.rect(mg, y, W - mg*2, 8, 'F');
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('MES', mg + 3, y + 5.5);
+  doc.text('ACTIVIDADES PROGRAMADAS', mg + colW[0] + 3, y + 5.5);
+  y += 8;
+
+  porMes.forEach((m, idx) => {
+    const lines = m.eventos.length === 0
+      ? ['Sin actividades']
+      : m.eventos.map(e => '• ' + e.titulo);
+
+    const lineH = 5;
+    const blockH = Math.max(lines.length * lineH + 4, 10);
+    checkPage(blockH + 2);
+
+    // Fondo alternado
+    if (idx % 2 === 0) {
+      doc.setFillColor(248, 248, 246);
+      doc.rect(mg, y, W - mg*2, blockH, 'F');
+    }
+
+    // Borde
+    doc.setDrawColor(216, 212, 204);
+    doc.rect(mg, y, W - mg*2, blockH);
+    doc.line(mg + colW[0], y, mg + colW[0], y + blockH);
+
+    // Mes
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(13, 82, 56);
+    doc.text(MESES[m.mes].substring(0,3).toUpperCase(), mg + 3, y + blockH/2 + 1.5);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(90, 90, 90);
+    doc.text(String(m.anio), mg + 3, y + blockH/2 + 6.5);
+
+    // Actividades
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    lines.forEach((line, li) => {
+      const ev = m.eventos[li];
+      if (ev) {
+        const rgb = hexToRgb(COLORES[ev.categoria].hex);
+        doc.setTextColor(rgb.r, rgb.g, rgb.b);
+      } else {
+        doc.setTextColor(180, 180, 180);
+      }
+      const truncated = line.length > 70 ? line.substring(0, 68) + '...' : line;
+      doc.text(truncated, mg + colW[0] + 3, y + 2 + lineH * (li + 0.8));
+    });
+
+    y += blockH;
+  });
+
+  // ---- PÁGINAS MES A MES DETALLADO ----
+  porMes.forEach(m => {
+    nuevaPagina();
+
+    // Header del mes
+    doc.setFillColor(232, 245, 239);
+    doc.rect(mg, y - 4, W - mg*2, 14, 'F');
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(13, 82, 56);
+    doc.text(MESES[m.mes] + ' ' + m.anio, mg + 4, y + 5);
+    y += 16;
+
+    if (m.eventos.length === 0) {
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(180, 180, 180);
+      doc.text('Sin actividades programadas para este mes.', mg, y);
+      return;
+    }
+
+    m.eventos.forEach(ev => {
+      const rgb = hexToRgb(COLORES[ev.categoria].hex);
+      const rgbClaro = hexToRgb(COLORES[ev.categoria].claro);
+
+      // Calcular altura del bloque
+      const descLines = doc.splitTextToSize(ev.descripcion, W - mg*2 - 20);
+      const blockH = 8 + descLines.length * 4.5 + 8;
+      checkPage(blockH + 4);
+
+      // Fondo
+      doc.setFillColor(rgbClaro.r, rgbClaro.g, rgbClaro.b);
+      doc.roundedRect(mg, y, W - mg*2, blockH, 3, 3, 'F');
+
+      // Borde izquierdo de color
+      doc.setFillColor(rgb.r, rgb.g, rgb.b);
+      doc.rect(mg, y, 4, blockH, 'F');
+
+      // Categoría
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(rgb.r, rgb.g, rgb.b);
+      doc.text(COLORES[ev.categoria].nombre.toUpperCase(), mg + 8, y + 6);
+
+      // Título
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(28, 28, 26);
+      doc.text(ev.titulo, mg + 8, y + 12);
+
+      // Descripción
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(90, 90, 90);
+      doc.text(descLines, mg + 8, y + 18);
+
+      // Fecha
+      if (ev.fecha) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(rgb.r, rgb.g, rgb.b);
+        doc.text('Fecha estimada: ' + formatDate(ev.fecha), mg + 8, y + blockH - 4);
+      }
+
+      y += blockH + 4;
+    });
+  });
+
+  // ---- PIE DE PÁGINA en todas las páginas ----
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7.5);
+    doc.setTextColor(180, 180, 180);
+    doc.text('Página ' + i + ' de ' + totalPages, W - mg, 290, { align: 'right' });
+    if (i > 1) {
+      doc.text('Plan Sanitario Ganadero · ' + p.nombre + ' · ' + p.establecimiento, mg, 290);
+    }
+  }
+
+  doc.save('Plan_Sanitario_' + p.nombre.replace(/ /g, '_') + '.pdf');
+};
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return { r, g, b };
+}
+
+// ======================================================
+// ACTUALIZAR AFTOSA
+// ======================================================
+function actualizarAftosa() {
+  const p = getParams();
+  p.aftosa1inicio = document.getElementById('aftosa1inicio').value;
+  p.aftosa1fin    = document.getElementById('aftosa1fin').value;
+  p.aftosa2inicio = document.getElementById('aftosa2inicio').value;
+  p.aftosa2fin    = document.getElementById('aftosa2fin').value;
+  const eventos = calcularPlan(p);
+  const porMes = agruparPorMes(eventos);
+  render(p, eventos, porMes);
+}
+
+// ======================================================
+// INIT
+// ======================================================
+window.addEventListener('load', () => {
+  const p = getParams();
+  const eventos = calcularPlan(p);
+  const porMes = agruparPorMes(eventos);
+  render(p, eventos, porMes);
+});
+</script>
+</body>
+</html>
